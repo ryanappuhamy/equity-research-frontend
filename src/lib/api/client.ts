@@ -5,6 +5,7 @@
 // warmUp() ping fired on app load to wake the server before the user acts.
 
 export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "https://equity-research-platform-ryanappuhamy.onrender.com";
 
