@@ -59,7 +59,7 @@ const alertColumns: Column<DemoAlertRow>[] = [
 
 export default function AlertsPage() {
   const [ticker, setTicker] = useState("");
-  const [operator, setOperator] = useState("price above");
+  const [operator, setOperator] = useState<string | null>("price above");
   const [threshold, setThreshold] = useState("");
 
   function handleAdd() {
