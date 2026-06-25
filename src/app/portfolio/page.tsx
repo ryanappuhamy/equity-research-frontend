@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ArrowUpRight, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
@@ -11,8 +13,10 @@ import { RiskBar } from "@/components/data/risk-bar";
 import { SectionLabel } from "@/components/data/section-label";
 import { Shell } from "@/components/layout/shell";
 import { Topbar } from "@/components/layout/topbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePortfolio, usePortfolioAnalysis } from "@/lib/api/hooks";
+import { usePortfolio, usePortfolioAnalysis, useSavePortfolio } from "@/lib/api/hooks";
 import type { Holding, RiskScenario } from "@/lib/api/types";
 import { fmtCurrency, fmtPercent, fmtPrice } from "@/lib/format";
 
@@ -25,7 +29,7 @@ const CHART_COLORS = [
   "#e0894a",
 ];
 
-const positionColumns: Column<Holding>[] = [
+const basePositionColumns: Column<Holding>[] = [
   {
     key: "ticker",
     header: "Ticker",
@@ -75,6 +79,16 @@ const positionColumns: Column<Holding>[] = [
     ),
   },
 ];
+
+type SavePosition = Pick<Holding, "ticker" | "shares" | "avg_cost_price">;
+
+function toSavePayload(positions: Holding[]): SavePosition[] {
+  return positions.map(({ ticker, shares, avg_cost_price }) => ({
+    ticker,
+    shares,
+    avg_cost_price,
+  }));
+}
 
 function computeTotals(positions: Holding[]) {
   const value = positions.reduce((s, h) => s + (h.market_value ?? 0), 0);
@@ -127,8 +141,13 @@ function PortfolioSkeleton() {
 }
 
 export default function PortfolioPage() {
+  const [ticker, setTicker] = useState("");
+  const [shares, setShares] = useState("");
+  const [avgCost, setAvgCost] = useState("");
+
   const portfolio = usePortfolio();
   const analysis = usePortfolioAnalysis();
+  const savePortfolio = useSavePortfolio();
 
   const isLoading = portfolio.isPending || analysis.isPending;
   const isError = portfolio.isError || analysis.isError;
@@ -137,6 +156,79 @@ export default function PortfolioPage() {
   const positions = portfolio.data?.positions ?? [];
   const risk = analysis.data?.risk;
   const totals = useMemo(() => computeTotals(positions), [positions]);
+
+  async function savePositions(next: SavePosition[]) {
+    await savePortfolio.mutateAsync(next);
+  }
+
+  async function handleAddPosition() {
+    const nextTicker = ticker.trim().toUpperCase();
+    const parsedShares = Number(shares);
+    const parsedAvgCost = Number(avgCost);
+
+    if (!nextTicker || !shares || !avgCost) {
+      toast.error("Enter ticker, shares, and avg cost price");
+      return;
+    }
+    if (!Number.isFinite(parsedShares) || parsedShares <= 0) {
+      toast.error("Invalid shares");
+      return;
+    }
+    if (!Number.isFinite(parsedAvgCost) || parsedAvgCost <= 0) {
+      toast.error("Invalid avg cost price");
+      return;
+    }
+
+    const withoutDuplicate = positions.filter((p) => p.ticker !== nextTicker);
+    const updated = [
+      ...toSavePayload(withoutDuplicate),
+      { ticker: nextTicker, shares: parsedShares, avg_cost_price: parsedAvgCost },
+    ];
+
+    try {
+      await savePositions(updated);
+      toast.success(`Position added for ${nextTicker}`);
+      setTicker("");
+      setShares("");
+      setAvgCost("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add position");
+    }
+  }
+
+  async function handleDeletePosition(tickerToDelete: string) {
+    const updated = toSavePayload(positions.filter((p) => p.ticker !== tickerToDelete));
+
+    try {
+      await savePositions(updated);
+      toast.success(`Position removed for ${tickerToDelete}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove position");
+    }
+  }
+
+  const positionColumns: Column<Holding>[] = useMemo(
+    () => [
+      ...basePositionColumns,
+      {
+        key: "actions",
+        header: "",
+        align: "right",
+        cell: (h) => (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Delete position for ${h.ticker}`}
+            disabled={savePortfolio.isPending}
+            onClick={() => handleDeletePosition(h.ticker)}
+          >
+            <Trash2 className="size-4 text-muted-foreground" />
+          </Button>
+        ),
+      },
+    ],
+    [positions, savePortfolio.isPending],
+  );
 
   const crashImpact = useMemo(
     () => findCrashImpact(risk?.scenarios, totals.value),
@@ -235,6 +327,45 @@ export default function PortfolioPage() {
                 />
               </AvailabilityGuard>
             </DataCard>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Add position</SectionLabel>
+            <div className="flex flex-wrap items-center gap-3">
+              <Input
+                placeholder="Ticker"
+                value={ticker}
+                onChange={(e) => setTicker(e.target.value)}
+                className="w-32"
+              />
+              <Input
+                placeholder="Shares"
+                value={shares}
+                onChange={(e) => setShares(e.target.value)}
+                inputMode="decimal"
+                className="w-28"
+              />
+              <Input
+                placeholder="Avg cost"
+                value={avgCost}
+                onChange={(e) => setAvgCost(e.target.value)}
+                inputMode="decimal"
+                className="w-32"
+              />
+              <Button onClick={handleAddPosition} disabled={savePortfolio.isPending}>
+                {savePortfolio.isPending ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Add position…
+                  </>
+                ) : (
+                  <>
+                    Add position
+                    <ArrowUpRight className="size-4" />
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
