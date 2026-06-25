@@ -8,6 +8,7 @@ import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
 import { MetricStat } from "@/components/data/metric-stat";
+import { ResearchReportLoading } from "@/components/data/research-report-loading";
 import { SectionLabel } from "@/components/data/section-label";
 import { EmptyScreen } from "@/components/layout/empty-screen";
 import { Shell } from "@/components/layout/shell";
@@ -15,7 +16,6 @@ import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useReport } from "@/lib/api/hooks";
 import { fmtMultiple, fmtPercent, fmtPrice } from "@/lib/format";
 
@@ -167,18 +167,7 @@ export default function ResearchReportPage() {
           />
         )}
 
-        {ticker && isFetching && (
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-6 w-40" />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-            </div>
-            <Skeleton className="h-32" />
-            <Skeleton className="h-48" />
-          </div>
-        )}
+        {ticker && isFetching && <ResearchReportLoading active />}
 
         {showResults && (
           <>
