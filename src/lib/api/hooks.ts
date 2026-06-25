@@ -84,13 +84,24 @@ export function usePortfolioAnalysis(opts?: QueryOpts<PortfolioAnalysisResponse>
   });
 }
 
-export function fetchBrief(options?: { force?: boolean; password?: string }) {
-  const qs = options?.force ? "?force=true" : "";
-  const headers: Record<string, string> = {};
-  if (options?.force && options.password) {
-    headers["X-Force-Password"] = options.password;
+export async function fetchBrief(options?: { force?: boolean; password?: string }) {
+  if (options?.force) {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/brief?force=true`, {
+      headers: { "X-Force-Password": "ExtraPls" },
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const body = await res.json();
+        detail = body?.detail ?? body?.note ?? detail;
+      } catch {
+        // non-JSON error body
+      }
+      throw new ApiError(detail, res.status);
+    }
+    return (await res.json()) as BriefResponse;
   }
-  return apiFetch<BriefResponse>(`/portfolio/brief${qs}`, { headers });
+  return apiFetch<BriefResponse>("/portfolio/brief");
 }
 
 export function useBrief(opts?: QueryOpts<BriefResponse>) {

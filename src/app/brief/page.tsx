@@ -1,24 +1,23 @@
 "use client";
 
-import { Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Loader2, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-import { AICard } from "@/components/data/ai-card";
+import { BriefMarkdown } from "@/components/data/brief-markdown";
 import { EmptyScreen } from "@/components/layout/empty-screen";
 import { Shell } from "@/components/layout/shell";
-import { Topbar } from "@/components/layout/topbar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBrief, useGenerateBrief, useRegenerateBrief } from "@/lib/api/hooks";
-
-const FORCE_PASSWORD = "ExtraPls";
+import { cn } from "@/lib/utils";
 
 function BriefSkeleton() {
   return (
-    <div className="flex max-w-3xl flex-col gap-4 p-6">
-      <Skeleton className="h-48 w-full rounded-xl" />
-      <Skeleton className="h-32 w-full rounded-xl" />
-      <Skeleton className="h-32 w-full rounded-xl" />
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <Skeleton className="h-10 w-48" />
+      <Skeleton className="h-5 w-64" />
+      <Skeleton className="h-96 w-full rounded-2xl" />
     </div>
   );
 }
@@ -28,9 +27,58 @@ function formatGeneratedAt(value: string | null | undefined): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
+    dateStyle: "long",
     timeStyle: "short",
   }).format(date);
+}
+
+function isGeneratedToday(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  return date.toDateString() === new Date().toDateString();
+}
+
+function daysSinceGenerated(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const generated = new Date(date);
+  generated.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Math.max(0, Math.floor((today.getTime() - generated.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+function FreshnessBadge({ generatedAt }: { generatedAt?: string | null }) {
+  if (isGeneratedToday(generatedAt)) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-up/30 bg-up/10 text-up"
+      >
+        Fresh
+      </Badge>
+    );
+  }
+
+  const days = daysSinceGenerated(generatedAt);
+  const label =
+    days === null
+      ? "Cached"
+      : days === 0
+        ? "Cached today"
+        : days === 1
+          ? "Cached 1 day ago"
+          : `Cached ${days} days ago`;
+
+  return (
+    <Badge variant="outline" className="border-border/60 bg-muted/20 text-muted-foreground">
+      {label}
+    </Badge>
+  );
 }
 
 export default function WeeklyBriefPage() {
@@ -54,13 +102,13 @@ export default function WeeklyBriefPage() {
   async function handleRegenerate() {
     const password = window.prompt("Enter password to regenerate brief:");
     if (!password) return;
-    if (password !== FORCE_PASSWORD) {
+    if (password !== "ExtraPls") {
       toast.error("Incorrect password");
       return;
     }
 
     try {
-      await regenerateBrief.mutateAsync(FORCE_PASSWORD);
+      await regenerateBrief.mutateAsync("ExtraPls");
       toast.success("Brief regenerated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to regenerate brief");
@@ -72,10 +120,8 @@ export default function WeeklyBriefPage() {
 
   return (
     <Shell>
-      <Topbar title="Weekly brief" />
-
       {(isError || mutationError) && (
-        <p className="px-6 pt-4 text-sm text-destructive">
+        <p className="px-4 pt-4 text-sm text-destructive sm:px-6">
           {isError && error instanceof Error
             ? error.message
             : mutationError instanceof Error
@@ -87,9 +133,9 @@ export default function WeeklyBriefPage() {
       {showInitialSkeleton ? (
         <BriefSkeleton />
       ) : (
-        <div className="flex max-w-3xl flex-col gap-4 p-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
           {!hasBrief && (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4 py-8">
               <EmptyScreen
                 icon={Sparkles}
                 title="No brief yet"
@@ -110,14 +156,28 @@ export default function WeeklyBriefPage() {
 
           {hasBrief && (
             <>
-              {generatedLabel && (
-                <p className="text-sm text-muted-foreground">Generated {generatedLabel}</p>
-              )}
-              <AICard title="Portfolio brief" model="claude-sonnet-4-6">
-                <p className="whitespace-pre-wrap">{data?.brief}</p>
-              </AICard>
-              <div>
-                <Button variant="outline" onClick={handleRegenerate} disabled={isGenerating}>
+              <header className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                      Weekly Brief
+                    </h1>
+                    <FreshnessBadge generatedAt={data?.generated_at} />
+                  </div>
+                  {generatedLabel && (
+                    <p className="text-sm text-muted-foreground">{generatedLabel}</p>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full shrink-0 border-white/[0.08] bg-card/60 sm:w-auto",
+                    isGenerating && "pointer-events-none",
+                  )}
+                  onClick={handleRegenerate}
+                  disabled={isGenerating}
+                >
                   {isGenerating ? (
                     <>
                       <Loader2 className="animate-spin" />
@@ -125,12 +185,24 @@ export default function WeeklyBriefPage() {
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="size-4" />
+                      <Lock className="size-4" />
                       Regenerate
                     </>
                   )}
                 </Button>
-              </div>
+              </header>
+
+              <article className="rounded-2xl border border-white/[0.06] bg-card/50 px-4 py-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] sm:px-6 sm:py-8">
+                <BriefMarkdown content={data?.brief ?? ""} />
+              </article>
+
+              <footer className="border-t border-white/[0.06] pt-4">
+                <p className="text-center text-xs leading-relaxed text-muted-foreground/70 sm:text-left">
+                  This weekly brief is AI-generated from your portfolio holdings and public market
+                  data. It is for informational purposes only and does not constitute investment
+                  advice, an offer, or a recommendation to buy or sell any security.
+                </p>
+              </footer>
             </>
           )}
         </div>
