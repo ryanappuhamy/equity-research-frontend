@@ -16,8 +16,10 @@ import { Topbar } from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useReport } from "@/lib/api/hooks";
+import { useClearReportCache, useReport } from "@/lib/api/hooks";
 import { fmtMultiple, fmtPercent, fmtPrice } from "@/lib/format";
+
+const FORCE_PASSWORD = "ExtraPls";
 
 const RECENT_TICKERS_KEY = "recentTickers";
 const MAX_RECENT_TICKERS = 6;
@@ -53,6 +55,7 @@ export default function ResearchReportPage() {
   const { data, isFetching, isError, error, refetch } = useReport(ticker, undefined, {
     enabled: !!ticker,
   });
+  const clearReportCache = useClearReportCache();
 
   useEffect(() => {
     setRecentTickers(readRecentTickers());
@@ -95,6 +98,24 @@ export default function ResearchReportPage() {
   const peSector = relVal?.pe_ttm?.peer_median;
   const companyName = fundamentals?.company_name ?? ticker;
   const showResults = !!ticker && !isFetching && !!data;
+  const metricUnavailable =
+    priceStats?.available === false || fundamentals?.available === false;
+
+  async function handleRetryLoad() {
+    const password = window.prompt("Enter password to clear cache and retry:");
+    if (!password) return;
+    if (password !== FORCE_PASSWORD) {
+      toast.error("Incorrect password");
+      return;
+    }
+
+    try {
+      await clearReportCache.mutateAsync(ticker);
+      await refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to clear cache and retry");
+    }
+  }
 
   return (
     <Shell>
@@ -218,6 +239,22 @@ export default function ResearchReportPage() {
                 </AvailabilityGuard>
               </DataCard>
             </div>
+
+            {metricUnavailable && (
+              <div className="-mt-1 flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-2 py-1 text-xs font-normal text-muted-foreground/70 hover:text-muted-foreground"
+                  onClick={handleRetryLoad}
+                  disabled={clearReportCache.isPending || isFetching}
+                >
+                  {clearReportCache.isPending || isFetching
+                    ? "Retrying…"
+                    : "Something didn't load correctly? Retry"}
+                </Button>
+              </div>
+            )}
 
             <div className="flex flex-col gap-3">
               <SectionLabel>Insider activity — ultimi 90 giorni</SectionLabel>

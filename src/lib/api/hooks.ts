@@ -42,6 +42,20 @@ export function useReport(ticker: string, peers?: string, opts?: QueryOpts<Repor
   });
 }
 
+export function useClearReportCache() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ticker: string) =>
+      apiFetch<{ deleted: boolean; ticker: string }>(
+        `/report/${encodeURIComponent(ticker)}/cache`,
+        { method: "DELETE" },
+      ),
+    onSuccess: (_data, ticker) => {
+      qc.removeQueries({ queryKey: qk.report(ticker) });
+    },
+  });
+}
+
 export function usePortfolio(opts?: QueryOpts<PortfolioResponse>) {
   return useQuery<PortfolioResponse, Error>({
     queryKey: qk.portfolio,
