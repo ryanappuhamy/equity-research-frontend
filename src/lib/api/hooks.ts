@@ -58,12 +58,43 @@ export function usePortfolioAnalysis(opts?: QueryOpts<PortfolioAnalysisResponse>
   });
 }
 
+export function fetchBrief(options?: { force?: boolean; password?: string }) {
+  const qs = options?.force ? "?force=true" : "";
+  const headers: Record<string, string> = {};
+  if (options?.force && options.password) {
+    headers["X-Force-Password"] = options.password;
+  }
+  return apiFetch<BriefResponse>(`/portfolio/brief${qs}`, { headers });
+}
+
 export function useBrief(opts?: QueryOpts<BriefResponse>) {
   return useQuery<BriefResponse, Error>({
     queryKey: qk.brief,
-    queryFn: () => apiFetch<BriefResponse>("/portfolio/brief"),
-    staleTime: 30 * 60_000,
+    queryFn: () => fetchBrief(),
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     ...opts,
+  });
+}
+
+export function useGenerateBrief() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => fetchBrief(),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.brief, data);
+    },
+  });
+}
+
+export function useRegenerateBrief() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (password: string) => fetchBrief({ force: true, password }),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.brief, data);
+    },
   });
 }
 

@@ -57,6 +57,8 @@ export interface PortfolioAnalysisResponse {
 export interface BriefResponse {
   portfolio: Holding[];
   brief: string;
+  generated_at?: string | null;
+  cached?: boolean;
 }
 
 export interface Alert {
