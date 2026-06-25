@@ -65,22 +65,6 @@ export const demoResearch = {
   aiOutlook: "Outlook: neutrale/accumulate su debolezza.",
 };
 
-export const demoRisk = {
-  totalValue: 5240,
-  costBasisChange: 0.123,
-  annualizedVol: 0.342,
-  scenarioCrash: -1048,
-  contributions: [
-    { ticker: "NVDA", pct: 0.68, color: "var(--chart-1)" },
-    { ticker: "MU", pct: 0.22, color: "var(--up)" },
-    { ticker: "MRVL", pct: 0.1, color: "#e0894a" },
-  ],
-  scenarios: [
-    { label: "Market -20%", value: -1048 },
-    { label: "Rates +100bps", value: -312 },
-  ],
-};
-
 export const demoBrief = {
   date: "24 giu 2026",
   sections: [
@@ -98,16 +82,6 @@ export const demoBrief = {
     },
   ],
 };
-
-// Positions behind the portfolio screen — consistent with the risk bars
-// (NVDA / MU / MRVL) and totalling ~$5,240 at +12.3% over cost.
-export const demoPortfolioPositions: Holding[] = [
-  { ticker: "NVDA", shares: 28, avg_cost_price: 101.0, current_price: 121.3, market_value: 3396.4, cost_basis: 2828.0, pnl: 568.4, pnl_pct: 0.201, weight: 0.648 },
-  { ticker: "MU", shares: 9, avg_cost_price: 118.0, current_price: 128.4, market_value: 1155.6, cost_basis: 1062.0, pnl: 93.6, pnl_pct: 0.088, weight: 0.22 },
-  { ticker: "MRVL", shares: 9, avg_cost_price: 86.5, current_price: 76.8, market_value: 691.2, cost_basis: 778.5, pnl: -87.3, pnl_pct: -0.112, weight: 0.132 },
-];
-
-export const demoPortfolioTotals = { value: 5243.2, pnlPct: 0.123 };
 
 export interface DemoAlertRow {
   ticker: string;

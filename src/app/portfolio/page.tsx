@@ -1,3 +1,8 @@
+"use client";
+
+import { useMemo } from "react";
+
+import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
 import { DataTable, type Column } from "@/components/data/data-table";
 import { Delta } from "@/components/data/delta";
@@ -6,9 +11,19 @@ import { RiskBar } from "@/components/data/risk-bar";
 import { SectionLabel } from "@/components/data/section-label";
 import { Shell } from "@/components/layout/shell";
 import { Topbar } from "@/components/layout/topbar";
-import { demoPortfolioPositions, demoPortfolioTotals, demoRisk } from "@/lib/demo";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePortfolio, usePortfolioAnalysis } from "@/lib/api/hooks";
+import type { Holding, RiskScenario } from "@/lib/api/types";
 import { fmtCurrency, fmtPercent, fmtPrice } from "@/lib/format";
-import type { Holding } from "@/lib/api/types";
+
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--up)",
+  "#e0894a",
+];
 
 const positionColumns: Column<Holding>[] = [
   {
@@ -61,77 +76,217 @@ const positionColumns: Column<Holding>[] = [
   },
 ];
 
+function computeTotals(positions: Holding[]) {
+  const value = positions.reduce((s, h) => s + (h.market_value ?? 0), 0);
+  const cost = positions.reduce((s, h) => s + (h.cost_basis ?? 0), 0);
+  const pnl = value - cost;
+  return { value, pnlPct: cost ? pnl / cost : 0 };
+}
+
+function scenarioLabel(key: string, scenario: RiskScenario): string {
+  return scenario.description || key.replace(/_/g, " ");
+}
+
+function findCrashImpact(
+  scenarios: Record<string, RiskScenario> | undefined,
+  portfolioValue: number,
+): number | null {
+  if (!scenarios || portfolioValue === 0) return null;
+
+  const entries = Object.entries(scenarios);
+  const marketCrash =
+    entries.find(([k]) => k.includes("market") && (k.includes("20") || k.includes("crash"))) ??
+    entries.find(([, s]) => s.estimated_portfolio_return < 0);
+
+  if (!marketCrash) return null;
+  return portfolioValue * marketCrash[1].estimated_portfolio_return;
+}
+
+function PortfolioSkeleton() {
+  return (
+    <div className="flex flex-col gap-5 p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-48" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-40" />
+      </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-5 w-36" />
+        <Skeleton className="h-32" />
+      </div>
+    </div>
+  );
+}
+
 export default function PortfolioPage() {
+  const portfolio = usePortfolio();
+  const analysis = usePortfolioAnalysis();
+
+  const isLoading = portfolio.isPending || analysis.isPending;
+  const isError = portfolio.isError || analysis.isError;
+  const error = portfolio.error ?? analysis.error;
+
+  const positions = portfolio.data?.positions ?? [];
+  const risk = analysis.data?.risk;
+  const totals = useMemo(() => computeTotals(positions), [positions]);
+
+  const crashImpact = useMemo(
+    () => findCrashImpact(risk?.scenarios, totals.value),
+    [risk?.scenarios, totals.value],
+  );
+
+  const scenarioRows = useMemo(() => {
+    if (!risk?.scenarios || totals.value === 0) return [];
+    return Object.entries(risk.scenarios).map(([key, s]) => ({
+      key,
+      label: scenarioLabel(key, s),
+      value: totals.value * s.estimated_portfolio_return,
+    }));
+  }, [risk?.scenarios, totals.value]);
+
+  const contributions = risk?.holdings_risk ?? [];
+
   return (
     <Shell>
-      <Topbar title="Portfolio analysis" demo />
+      <Topbar title="Portfolio analysis" />
 
-      <div className="flex flex-col gap-5 p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <DataCard>
-            <MetricStat
-              label="Valore totale"
-              value={fmtCurrency(demoPortfolioTotals.value)}
-              footnote={
-                <span className="text-up">{fmtPercent(demoPortfolioTotals.pnlPct, { signed: true })} cost basis</span>
-              }
-            />
-          </DataCard>
-          <DataCard>
-            <MetricStat
-              label="Vol. annualizzata"
-              value={fmtPercent(demoRisk.annualizedVol)}
-              footnote="portafoglio"
-            />
-          </DataCard>
-          <DataCard>
-            <MetricStat
-              label="Scenario -20%"
-              value={<span className="text-down">{fmtCurrency(demoRisk.scenarioCrash)}</span>}
-              footnote="market crash"
-            />
-          </DataCard>
-        </div>
+      {isError && (
+        <p className="px-6 pt-4 text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load portfolio"}
+        </p>
+      )}
 
-        <div className="flex flex-col gap-3">
-          <SectionLabel>Posizioni</SectionLabel>
-          <DataCard source="yfinance" contentClassName="px-2">
-            <DataTable
-              columns={positionColumns}
-              rows={demoPortfolioPositions}
-              getRowKey={(h) => h.ticker}
-            />
-          </DataCard>
-        </div>
+      {isLoading ? (
+        <PortfolioSkeleton />
+      ) : (
+        <div className="flex flex-col gap-5 p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <DataCard>
+              <AvailabilityGuard
+                available={portfolio.data?.available}
+                note={portfolio.data?.note}
+                emptyLabel="Portfolio unavailable"
+              >
+                <MetricStat
+                  label="Valore totale"
+                  value={fmtCurrency(totals.value)}
+                  footnote={
+                    <span className={totals.pnlPct >= 0 ? "text-up" : "text-down"}>
+                      {fmtPercent(totals.pnlPct, { signed: true })} cost basis
+                    </span>
+                  }
+                />
+              </AvailabilityGuard>
+            </DataCard>
+            <DataCard>
+              <AvailabilityGuard
+                available={risk?.available}
+                note={risk?.note}
+                emptyLabel="Risk metrics unavailable"
+              >
+                <MetricStat
+                  label="Vol. annualizzata"
+                  value={fmtPercent(risk?.portfolio_annualized_volatility)}
+                  footnote="portafoglio"
+                />
+              </AvailabilityGuard>
+            </DataCard>
+            <DataCard>
+              <AvailabilityGuard
+                available={risk?.available}
+                note={risk?.note}
+                emptyLabel="Scenario analysis unavailable"
+              >
+                <MetricStat
+                  label="Scenario -20%"
+                  value={
+                    crashImpact != null ? (
+                      <span className="text-down">{fmtCurrency(crashImpact)}</span>
+                    ) : (
+                      "—"
+                    )
+                  }
+                  footnote="market crash"
+                />
+              </AvailabilityGuard>
+            </DataCard>
+          </div>
 
-        <div className="flex flex-col gap-3">
-          <SectionLabel>Risk contribution per posizione</SectionLabel>
-          <DataCard source="yfinance">
-            <div className="flex flex-col gap-4">
-              {demoRisk.contributions.map((c) => (
-                <RiskBar key={c.ticker} label={c.ticker} pct={c.pct} color={c.color} />
-              ))}
-            </div>
-          </DataCard>
-        </div>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Posizioni</SectionLabel>
+            <DataCard source="yfinance" contentClassName="px-2">
+              <AvailabilityGuard
+                available={portfolio.data?.available}
+                note={portfolio.data?.note}
+                emptyLabel="Positions unavailable"
+              >
+                <DataTable
+                  columns={positionColumns}
+                  rows={positions}
+                  getRowKey={(h) => h.ticker}
+                />
+              </AvailabilityGuard>
+            </DataCard>
+          </div>
 
-        <div className="flex flex-col gap-3">
-          <SectionLabel>Scenario analysis</SectionLabel>
-          <DataCard>
-            <div className="flex flex-col divide-y divide-border/60">
-              {demoRisk.scenarios.map((s) => (
-                <div
-                  key={s.label}
-                  className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                >
-                  <span className="text-sm">{s.label}</span>
-                  <span className="text-sm tabular-nums text-down">{fmtCurrency(s.value)}</span>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Risk contribution per posizione</SectionLabel>
+            <DataCard source="yfinance">
+              <AvailabilityGuard
+                available={risk?.available}
+                note={risk?.note}
+                emptyLabel="Risk contribution unavailable"
+              >
+                <div className="flex flex-col gap-4">
+                  {contributions.map((c, i) => (
+                    <RiskBar
+                      key={c.ticker}
+                      label={c.ticker}
+                      pct={c.risk_contribution_pct}
+                      color={CHART_COLORS[i % CHART_COLORS.length]}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </DataCard>
+              </AvailabilityGuard>
+            </DataCard>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Scenario analysis</SectionLabel>
+            <DataCard>
+              <AvailabilityGuard
+                available={risk?.available}
+                note={risk?.note}
+                emptyLabel="Scenario analysis unavailable"
+              >
+                <div className="flex flex-col divide-y divide-border/60">
+                  {scenarioRows.map((s) => (
+                    <div
+                      key={s.key}
+                      className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                    >
+                      <span className="text-sm">{s.label}</span>
+                      <span
+                        className={`text-sm tabular-nums ${s.value < 0 ? "text-down" : "text-foreground"}`}
+                      >
+                        {fmtCurrency(s.value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </AvailabilityGuard>
+            </DataCard>
+          </div>
         </div>
-      </div>
+      )}
     </Shell>
   );
 }
