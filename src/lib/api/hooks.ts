@@ -111,7 +111,10 @@ export function useCreateAlert() {
         method: "POST",
         body: JSON.stringify(input),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.alerts }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.alerts });
+      qc.invalidateQueries({ queryKey: qk.alertsCheck });
+    },
   });
 }
 
@@ -120,6 +123,9 @@ export function useDeleteAlert() {
   return useMutation({
     mutationFn: (id: number) =>
       apiFetch<{ deleted: boolean; id: number }>(`/alerts/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.alerts }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.alerts });
+      qc.invalidateQueries({ queryKey: qk.alertsCheck });
+    },
   });
 }

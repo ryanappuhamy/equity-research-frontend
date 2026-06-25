@@ -3,7 +3,7 @@
 // exists (and instantly, without waiting on the Render cold start). Swap any
 // of these for the live React Query hooks in lib/api/hooks.ts.
 
-import type { Holding, TriggeredAlert } from "./api/types";
+import type { Holding } from "./api/types";
 
 export const DEMO = true;
 
@@ -25,11 +25,6 @@ export const demoEquityCurve: { date: string; value: number }[] = [
   { date: "Aug", value: 15210 },
   { date: "Sep", value: 14980 },
   { date: "Oct", value: 15680 },
-];
-
-export const demoTriggered: TriggeredAlert[] = [
-  { alert_id: 1, ticker: "NVDA", metric: "price", operator: "above", threshold: 120, current_value: 121.3, explanation: "NVDA price=121.3 is above threshold 120" },
-  { alert_id: 2, ticker: "AMD", metric: "pe_ttm", operator: "below", threshold: 30, current_value: 27.4, explanation: "AMD pe_ttm=27.4 is below threshold 30" },
 ];
 
 export const demoTotals = (() => {
@@ -64,16 +59,3 @@ export const demoResearch = {
     "AAPL mantiene una posizione competitiva solida nel segmento premium con margini lordi stabili al 46%. Il rallentamento della crescita in Cina (-8% YoY) rimane il principale rischio near-term. Il ciclo di upgrade iPhone 16 appare in linea con le attese. Valutazione a premio rispetto ai peer giustificata dall'ecosistema, ma upside limitato ai prezzi correnti.",
   aiOutlook: "Outlook: neutrale/accumulate su debolezza.",
 };
-
-export interface DemoAlertRow {
-  ticker: string;
-  condition: string;
-  current: string;
-  status: "Triggerato" | "OK";
-}
-
-export const demoAlertsList: DemoAlertRow[] = [
-  { ticker: "NVDA", condition: "Price above $200", current: "Attuale: $200.04", status: "Triggerato" },
-  { ticker: "MU", condition: "P/E below 15x", current: "Attuale: 18.2x", status: "OK" },
-  { ticker: "MRVL", condition: "Insider buy > $1M", current: "Nessuna attività", status: "OK" },
-];
