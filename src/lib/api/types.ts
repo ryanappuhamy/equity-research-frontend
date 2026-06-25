@@ -102,6 +102,9 @@ export interface Fundamentals extends Available {
   industry?: string;
   market_cap?: number;
   pe_ttm?: number;
+  forward_pe?: number;
+  trailing_pe?: number;
+  peg_ratio?: number;
   ev_ebitda?: number;
   ev_revenue?: number;
   price_to_book?: number;
@@ -113,6 +116,14 @@ export interface Fundamentals extends Available {
   debt_to_equity?: number;
   current_ratio?: number;
   revenue_growth_yoy?: number;
+  eps_growth_yoy?: number;
+  revenue_forward?: number;
+  revenue_ttm?: number;
+  ebitda_ttm?: number;
+  net_income_ttm?: number;
+  revenue_yoy?: number;
+  ebitda_yoy?: number;
+  net_income_yoy?: number;
   fcf_yield?: number;
   dividend_yield?: number;
 }

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
-import { MetricStat } from "@/components/data/metric-stat";
+import { ReportMetricCards } from "@/components/data/report-metric-cards";
 import { ResearchReportLoading } from "@/components/data/research-report-loading";
 import { SectionLabel } from "@/components/data/section-label";
 import { EmptyScreen } from "@/components/layout/empty-screen";
@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useClearReportCache, useReport } from "@/lib/api/hooks";
-import { fmtMultiple, fmtPercent, fmtPrice } from "@/lib/format";
 
 const FORCE_PASSWORD = "ExtraPls";
 
@@ -92,10 +91,6 @@ export default function ResearchReportPage() {
   const fundamentals = data?.data?.fundamentals;
   const priceStats = data?.data?.price_stats;
   const insider = data?.data?.insider_activity;
-  const relVal = data?.data?.relative_valuation as
-    | Record<string, { peer_median?: number }>
-    | undefined;
-  const peSector = relVal?.pe_ttm?.peer_median;
   const companyName = fundamentals?.company_name ?? ticker;
   const showResults = !!ticker && !isFetching && !!data;
   const metricUnavailable =
@@ -198,47 +193,7 @@ export default function ResearchReportPage() {
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <DataCard>
-                <AvailabilityGuard available={priceStats?.available} note={priceStats?.note}>
-                  <MetricStat
-                    label="Price"
-                    value={fmtPrice(priceStats?.last_price)}
-                    footnote={
-                      priceStats?.return_1y != null ? (
-                        <span className="text-muted-foreground">
-                          {fmtPercent(priceStats.return_1y, { signed: true })} 1Y
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </AvailabilityGuard>
-              </DataCard>
-              <DataCard>
-                <AvailabilityGuard available={fundamentals?.available} note={fundamentals?.note}>
-                  <MetricStat
-                    label="P/E TTM"
-                    value={fmtMultiple(fundamentals?.pe_ttm)}
-                    footnote={
-                      peSector != null
-                        ? `vs peers ${fmtMultiple(peSector)}`
-                        : fundamentals?.sector
-                          ? fundamentals.sector
-                          : undefined
-                    }
-                  />
-                </AvailabilityGuard>
-              </DataCard>
-              <DataCard>
-                <AvailabilityGuard available={fundamentals?.available} note={fundamentals?.note}>
-                  <MetricStat
-                    label="Revenue growth"
-                    value={fmtPercent(fundamentals?.revenue_growth_yoy, { signed: true })}
-                    footnote="YoY"
-                  />
-                </AvailabilityGuard>
-              </DataCard>
-            </div>
+            <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
 
             {metricUnavailable && (
               <div className="-mt-1 flex justify-center">

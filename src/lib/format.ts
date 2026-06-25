@@ -44,6 +44,30 @@ export function fmtPrice(value: number | null | undefined): string {
   }).format(value);
 }
 
+export function fmtCompactUsd(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+export function fmtMetric(
+  value: string,
+  fallback = "N/A",
+): string {
+  return value === "—" ? fallback : value;
+}
+
+export function signedColor(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value) || value === 0) {
+    return "text-muted-foreground";
+  }
+  return value > 0 ? "text-up" : "text-down";
+}
+
 export function deltaDirection(value: number | null | undefined): "up" | "down" | "flat" {
   if (value === null || value === undefined || Number.isNaN(value) || value === 0) return "flat";
   return value > 0 ? "up" : "down";
