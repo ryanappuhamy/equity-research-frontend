@@ -90,6 +90,10 @@ function toSavePayload(positions: Holding[]): SavePosition[] {
   }));
 }
 
+function parseDecimalInput(value: string): number {
+  return Number(value.replace(/,/g, "."));
+}
+
 function computeTotals(positions: Holding[]) {
   const value = positions.reduce((s, h) => s + (h.market_value ?? 0), 0);
   const cost = positions.reduce((s, h) => s + (h.cost_basis ?? 0), 0);
@@ -163,8 +167,8 @@ export default function PortfolioPage() {
 
   async function handleAddPosition() {
     const nextTicker = ticker.trim().toUpperCase();
-    const parsedShares = Number(shares);
-    const parsedAvgCost = Number(avgCost);
+    const parsedShares = parseDecimalInput(shares);
+    const parsedAvgCost = parseDecimalInput(avgCost);
 
     if (!nextTicker || !shares || !avgCost) {
       toast.error("Enter ticker, shares, and avg cost price");
