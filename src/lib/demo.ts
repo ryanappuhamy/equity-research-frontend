@@ -65,24 +65,6 @@ export const demoResearch = {
   aiOutlook: "Outlook: neutrale/accumulate su debolezza.",
 };
 
-export const demoBrief = {
-  date: "24 giu 2026",
-  sections: [
-    {
-      title: "Macro context",
-      body: "Fed ha mantenuto i tassi invariati al 4.25–4.50%. CPI di maggio +3.1% YoY, sopra attese. Mercati prezzano un taglio a settembre con probabilità 62%.",
-    },
-    {
-      title: "Portafoglio — settimana",
-      body: "NVDA +4.2% su guidance positiva data center. MU flat in attesa earnings 26 giu. MRVL -1.1% su profit taking. Performance portafoglio: +2.8% vs S&P500 +1.1%.",
-    },
-    {
-      title: "Watchlist e azioni suggerite",
-      body: "Considerare riduzione esposizione NVDA (68% risk contribution). MU earnings il 26 giu — attesi EPS $1.48, revenue $8.9B. Monitorare guidance MRVL su custom silicon AI.",
-    },
-  ],
-};
-
 export interface DemoAlertRow {
   ticker: string;
   condition: string;
