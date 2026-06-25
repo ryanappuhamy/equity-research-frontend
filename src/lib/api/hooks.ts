@@ -45,12 +45,15 @@ export function useReport(ticker: string, peers?: string, opts?: QueryOpts<Repor
 export function useClearReportCache() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (ticker: string) =>
+    mutationFn: ({ ticker, password }: { ticker: string; password: string }) =>
       apiFetch<{ deleted: boolean; ticker: string }>(
         `/report/${encodeURIComponent(ticker)}/cache`,
-        { method: "DELETE" },
+        {
+          method: "DELETE",
+          headers: { "X-Force-Password": password },
+        },
       ),
-    onSuccess: (_data, ticker) => {
+    onSuccess: (_data, { ticker }) => {
       qc.removeQueries({ queryKey: qk.report(ticker) });
     },
   });

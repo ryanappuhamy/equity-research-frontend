@@ -105,7 +105,7 @@ export default function ResearchReportPage() {
     }
 
     try {
-      await clearReportCache.mutateAsync(ticker);
+      await clearReportCache.mutateAsync({ ticker, password: FORCE_PASSWORD });
       await refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear cache and retry");
