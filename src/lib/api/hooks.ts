@@ -7,7 +7,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 
-import { apiFetch } from "./client";
+import { ApiError, apiFetch } from "./client";
 import type {
   Alert,
   AlertMetric,
@@ -45,15 +45,24 @@ export function useReport(ticker: string, peers?: string, opts?: QueryOpts<Repor
 export function useClearReportCache() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticker, password }: { ticker: string; password: string }) =>
-      apiFetch<{ deleted: boolean; ticker: string }>(
-        `/report/${encodeURIComponent(ticker)}/cache`,
-        {
-          method: "DELETE",
-          headers: { "X-Force-Password": password },
-        },
-      ),
-    onSuccess: (_data, { ticker }) => {
+    mutationFn: async (ticker: string) => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/report/${ticker}/cache`, {
+        method: "DELETE",
+        headers: { "X-Force-Password": "ExtraPls" },
+      });
+      if (!res.ok) {
+        let detail = res.statusText;
+        try {
+          const body = await res.json();
+          detail = body?.detail ?? body?.note ?? detail;
+        } catch {
+          // non-JSON error body
+        }
+        throw new ApiError(detail, res.status);
+      }
+      return (await res.json()) as { deleted: boolean; ticker: string };
+    },
+    onSuccess: (_data, ticker) => {
       qc.removeQueries({ queryKey: qk.report(ticker) });
     },
   });

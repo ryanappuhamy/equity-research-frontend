@@ -18,8 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useClearReportCache, useReport } from "@/lib/api/hooks";
 
-const FORCE_PASSWORD = "ExtraPls";
-
 const RECENT_TICKERS_KEY = "recentTickers";
 const MAX_RECENT_TICKERS = 6;
 
@@ -99,13 +97,13 @@ export default function ResearchReportPage() {
   async function handleRetryLoad() {
     const password = window.prompt("Enter password to clear cache and retry:");
     if (!password) return;
-    if (password !== FORCE_PASSWORD) {
+    if (password !== "ExtraPls") {
       toast.error("Incorrect password");
       return;
     }
 
     try {
-      await clearReportCache.mutateAsync({ ticker, password: FORCE_PASSWORD });
+      await clearReportCache.mutateAsync(ticker);
       await refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear cache and retry");
