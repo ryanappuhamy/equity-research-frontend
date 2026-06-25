@@ -57,6 +57,7 @@ const FINANCE_FACTS = [
 
 const FACT_DISPLAY_MS = 18_000;
 const FADE_HALF_MS = 900;
+const INITIAL_DELAY_MS = 3000;
 const SLOW_NOTICE_DELAY_MS = 5000;
 
 const SLOW_NOTICE =
@@ -64,17 +65,21 @@ const SLOW_NOTICE =
 
 export function ResearchReportLoading({ active }: { active: boolean }) {
   const [factIndex, setFactIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [showSlowNotice, setShowSlowNotice] = useState(false);
 
   useEffect(() => {
     if (!active) {
       setShowSlowNotice(false);
+      setMounted(false);
+      setVisible(false);
       return;
     }
 
     setFactIndex(0);
-    setVisible(true);
+    setMounted(false);
+    setVisible(false);
     setShowSlowNotice(false);
 
     let factTimeout = 0;
@@ -92,13 +97,20 @@ export function ResearchReportLoading({ active }: { active: boolean }) {
       }, FACT_DISPLAY_MS);
     }
 
-    scheduleNext(0);
+    const initialTimeout = window.setTimeout(() => {
+      setMounted(true);
+      window.requestAnimationFrame(() => {
+        setVisible(true);
+      });
+      scheduleNext(0);
+    }, INITIAL_DELAY_MS);
 
     const noticeTimer = window.setTimeout(() => {
       setShowSlowNotice(true);
     }, SLOW_NOTICE_DELAY_MS);
 
     return () => {
+      window.clearTimeout(initialTimeout);
       window.clearTimeout(factTimeout);
       window.clearTimeout(fadeTimeout);
       window.clearTimeout(noticeTimer);
@@ -111,18 +123,20 @@ export function ResearchReportLoading({ active }: { active: boolean }) {
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] flex-col items-center justify-center px-6 py-16">
-      <div className="max-w-2xl text-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
-          Did you know?
-        </p>
-        <div
-          className="mt-6 transition-opacity duration-[900ms] ease-in-out"
-          style={{ opacity: visible ? 1 : 0 }}
-        >
-          <h2 className="text-lg font-medium tracking-tight text-foreground/90">{fact.term}</h2>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground/85">{fact.definition}</p>
+      {mounted && (
+        <div className="max-w-2xl text-center">
+          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
+            Did you know?
+          </p>
+          <div
+            className="mt-6 transition-opacity duration-[900ms] ease-in-out"
+            style={{ opacity: visible ? 1 : 0 }}
+          >
+            <h2 className="text-lg font-medium tracking-tight text-foreground/90">{fact.term}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground/85">{fact.definition}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {showSlowNotice && (
         <p
