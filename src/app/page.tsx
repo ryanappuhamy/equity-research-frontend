@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
+import { InsiderActivityTable } from "@/components/data/insider-activity-table";
 import { ReportMetricCards } from "@/components/data/report-metric-cards";
 import { ResearchReportLoading } from "@/components/data/research-report-loading";
 import { SectionLabel } from "@/components/data/section-label";
@@ -217,14 +218,7 @@ export default function ResearchReportPage() {
                   note={insider?.note}
                   emptyLabel="Insider data unavailable"
                 >
-                  <p className="text-sm text-foreground/80">
-                    {"form4_filings_last_6m" in (insider ?? {})
-                      ? `${insider?.form4_filings_last_6m ?? 0} Form 4 filings in the last 6 months`
-                      : null}
-                    {insider?.most_recent_form4
-                      ? ` · most recent ${insider.most_recent_form4}`
-                      : null}
-                  </p>
+                  <InsiderActivityTable activity={insider} />
                 </AvailabilityGuard>
               </DataCard>
             </div>

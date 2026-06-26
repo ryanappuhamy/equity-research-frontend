@@ -140,6 +140,27 @@ export interface PriceStats extends Available {
   low_52w?: number | null;
 }
 
+export interface InsiderTransaction {
+  name?: string;
+  insider_name?: string;
+  role?: string;
+  title?: string;
+  action?: string;
+  transaction_type?: string;
+  amount?: number | string | null;
+  value?: number | null;
+  dollar_value?: number | null;
+  date?: string | null;
+  filing_date?: string | null;
+  transaction_date?: string | null;
+}
+
+export interface InsiderActivity extends Available {
+  form4_filings_last_6m?: number;
+  most_recent_form4?: string | null;
+  transactions?: InsiderTransaction[];
+}
+
 export interface ReportData {
   ticker: string;
   fundamentals?: Fundamentals;
@@ -147,7 +168,7 @@ export interface ReportData {
   peers?: string[];
   comps_table?: Record<string, unknown>[];
   relative_valuation?: Record<string, unknown> & Available;
-  insider_activity?: Available & Record<string, unknown>;
+  insider_activity?: InsiderActivity;
   analyst_consensus?: Available & Record<string, unknown>;
   macro_context?: Available & Record<string, unknown>;
   transcript_analysis?: Available & Record<string, unknown>;
