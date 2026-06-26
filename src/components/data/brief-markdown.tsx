@@ -101,10 +101,30 @@ const briefMarkdownComponents: Components = {
   },
 };
 
+function stripLeadingH1(markdown: string): string {
+  const lines = markdown.split("\n");
+  let index = 0;
+
+  while (index < lines.length && lines[index].trim() === "") {
+    index += 1;
+  }
+
+  if (index < lines.length && /^#\s+/.test(lines[index].trim())) {
+    index += 1;
+    while (index < lines.length && lines[index].trim() === "") {
+      index += 1;
+    }
+  }
+
+  return lines.slice(index).join("\n");
+}
+
 export function BriefMarkdown({ content }: { content: string }) {
+  const body = stripLeadingH1(content);
+
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={briefMarkdownComponents}>
-      {content}
+      {body}
     </ReactMarkdown>
   );
 }

@@ -32,47 +32,45 @@ function formatGeneratedAt(value: string | null | undefined): string | null {
   }).format(date);
 }
 
-function isGeneratedToday(value: string | null | undefined): boolean {
-  if (!value) return false;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  return date.toDateString() === new Date().toDateString();
+function formatCacheBadge(cachedAt?: string | null): { fresh: boolean; label: string } {
+  if (!cachedAt) return { fresh: false, label: "Cached" };
+
+  const cached = new Date(cachedAt);
+  if (Number.isNaN(cached.getTime())) return { fresh: false, label: "Cached" };
+
+  const now = new Date();
+  const diffMs = now.getTime() - cached.getTime();
+  if (diffMs < 0) return { fresh: true, label: "Fresh" };
+
+  if (cached.toDateString() === now.toDateString()) {
+    return { fresh: true, label: "Fresh" };
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 24) {
+    return {
+      fresh: false,
+      label: hours === 1 ? "Cached 1 hour ago" : `Cached ${hours} hours ago`,
+    };
+  }
+
+  const days = Math.floor(hours / 24);
+  return {
+    fresh: false,
+    label: days === 1 ? "Cached 1 day ago" : `Cached ${days} days ago`,
+  };
 }
 
-function daysSinceGenerated(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
+function FreshnessBadge({ cachedAt }: { cachedAt?: string | null }) {
+  const { fresh, label } = formatCacheBadge(cachedAt);
 
-  const generated = new Date(date);
-  generated.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return Math.max(0, Math.floor((today.getTime() - generated.getTime()) / (1000 * 60 * 60 * 24)));
-}
-
-function FreshnessBadge({ generatedAt }: { generatedAt?: string | null }) {
-  if (isGeneratedToday(generatedAt)) {
+  if (fresh) {
     return (
-      <Badge
-        variant="outline"
-        className="border-up/30 bg-up/10 text-up"
-      >
-        Fresh
+      <Badge variant="outline" className="border-up/30 bg-up/10 text-up">
+        {label}
       </Badge>
     );
   }
-
-  const days = daysSinceGenerated(generatedAt);
-  const label =
-    days === null
-      ? "Cached"
-      : days === 0
-        ? "Cached today"
-        : days === 1
-          ? "Cached 1 day ago"
-          : `Cached ${days} days ago`;
 
   return (
     <Badge variant="outline" className="border-border/60 bg-muted/20 text-muted-foreground">
@@ -88,7 +86,7 @@ export default function WeeklyBriefPage() {
 
   const isGenerating = generateBrief.isPending || regenerateBrief.isPending;
   const hasBrief = Boolean(data?.brief?.trim());
-  const generatedLabel = formatGeneratedAt(data?.generated_at);
+  const generatedLabel = formatGeneratedAt(data?.generated_at ?? data?.cached_at);
 
   async function handleGenerate() {
     try {
@@ -162,7 +160,7 @@ export default function WeeklyBriefPage() {
                     <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                       Weekly Brief
                     </h1>
-                    <FreshnessBadge generatedAt={data?.generated_at} />
+                    <FreshnessBadge cachedAt={data?.cached_at} />
                   </div>
                   {generatedLabel && (
                     <p className="text-sm text-muted-foreground">{generatedLabel}</p>

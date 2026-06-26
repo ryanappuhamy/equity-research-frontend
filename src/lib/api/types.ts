@@ -58,6 +58,7 @@ export interface BriefResponse {
   portfolio: Holding[];
   brief: string;
   generated_at?: string | null;
+  cached_at?: string | null;
   cached?: boolean;
 }
 
