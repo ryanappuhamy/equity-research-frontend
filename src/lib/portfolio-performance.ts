@@ -2,6 +2,9 @@ import type { NavPoint } from "@/lib/api/types";
 
 export type PerformancePeriod = "1D" | "7D" | "1M" | "6M" | "1Y" | "5Y" | "MAX";
 
+export const BENCHMARK_TICKERS = ["SPY", "QQQ", "SOXX", "VTI"] as const;
+export type BenchmarkTicker = (typeof BENCHMARK_TICKERS)[number];
+
 export const PERFORMANCE_PERIODS: PerformancePeriod[] = [
   "1D",
   "7D",

@@ -18,11 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolioPerformance } from "@/lib/api/hooks";
 import {
+  BENCHMARK_TICKERS,
   computeMetrics,
   filterSeriesByPeriod,
   formatChartDate,
   PERFORMANCE_PERIODS,
   reindexSeries,
+  type BenchmarkTicker,
   type PerformancePeriod,
 } from "@/lib/portfolio-performance";
 import { fmtNumber, fmtPercent, signedColor } from "@/lib/format";
@@ -31,32 +33,16 @@ import { cn } from "@/lib/utils";
 const NAV_COLOR = "var(--up)";
 const BENCHMARK_COLOR = "var(--chart-4)";
 
-function PerformanceSkeleton() {
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap gap-2">
-        {PERFORMANCE_PERIODS.map((period) => (
-          <Skeleton key={period} className="h-7 w-10 rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-[280px] w-full rounded-xl" />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Skeleton className="h-24 rounded-xl" />
-        <Skeleton className="h-24 rounded-xl" />
-        <Skeleton className="h-24 rounded-xl" />
-      </div>
-    </div>
-  );
-}
-
 function ChartTooltip({
   active,
   payload,
   label,
+  benchmarkTicker,
 }: {
   active?: boolean;
   payload?: { dataKey: string; value: number; color: string }[];
   label?: string;
+  benchmarkTicker: string;
 }) {
   if (!active || !payload?.length) return null;
 
@@ -73,36 +59,41 @@ function ChartTooltip({
       )}
       {benchmark != null && (
         <p className="font-medium tabular-nums text-muted-foreground">
-          SPY {fmtPercent(benchmark / 100 - 1, { signed: true })}
+          {benchmarkTicker} {fmtPercent(benchmark / 100 - 1, { signed: true })}
         </p>
       )}
     </div>
   );
 }
 
-function PeriodSelector({
+function SelectorPills<T extends string>({
+  options,
   value,
   onChange,
+  minWidthClass = "min-w-9",
 }: {
-  value: PerformancePeriod;
-  onChange: (period: PerformancePeriod) => void;
+  options: readonly T[];
+  value: T;
+  onChange: (next: T) => void;
+  minWidthClass?: string;
 }) {
   return (
     <div className="flex flex-wrap gap-1 rounded-xl border border-white/[0.06] bg-muted/40 p-1">
-      {PERFORMANCE_PERIODS.map((period) => (
+      {options.map((option) => (
         <Button
-          key={period}
+          key={option}
           type="button"
           size="xs"
           variant="ghost"
           className={cn(
-            "min-w-9 px-2.5 font-medium tabular-nums text-muted-foreground",
-            value === period &&
+            minWidthClass,
+            "px-2.5 font-medium tabular-nums text-muted-foreground",
+            value === option &&
               "bg-card text-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
           )}
-          onClick={() => onChange(period)}
+          onClick={() => onChange(option)}
         >
-          {period}
+          {option}
         </Button>
       ))}
     </div>
@@ -112,9 +103,11 @@ function PeriodSelector({
 function PerformanceChart({
   data,
   period,
+  benchmarkTicker,
 }: {
   data: ReturnType<typeof reindexSeries>;
   period: PerformancePeriod;
+  benchmarkTicker: string;
 }) {
   const tickFormatter = useMemo(
     () => (value: string) => formatChartDate(value, period),
@@ -152,7 +145,7 @@ function PerformanceChart({
             tickFormatter={(value: number) => fmtNumber(value, 0)}
           />
           <Tooltip
-            content={<ChartTooltip />}
+            content={<ChartTooltip benchmarkTicker={benchmarkTicker} />}
             cursor={{ stroke: "var(--accent-bright)", strokeOpacity: 0.35 }}
           />
           <Legend
@@ -161,7 +154,9 @@ function PerformanceChart({
             iconType="plainline"
             wrapperStyle={{ fontSize: 12, paddingBottom: 8 }}
             formatter={(value) => (
-              <span className="text-muted-foreground">{value === "nav" ? "Portfolio" : "SPY"}</span>
+              <span className="text-muted-foreground">
+                {value === "nav" ? "Portfolio" : benchmarkTicker}
+              </span>
             )}
           />
           <Line
@@ -190,7 +185,10 @@ function PerformanceChart({
 
 export function PortfolioPerformancePanel() {
   const [period, setPeriod] = useState<PerformancePeriod>("1Y");
-  const performance = usePortfolioPerformance();
+  const [benchmark, setBenchmark] = useState<BenchmarkTicker>("SPY");
+  const performance = usePortfolioPerformance(benchmark);
+
+  const benchmarkTicker = performance.data?.benchmark_ticker ?? benchmark;
 
   const filtered = useMemo(() => {
     const series = performance.data?.series ?? [];
@@ -199,10 +197,7 @@ export function PortfolioPerformancePanel() {
 
   const chartData = useMemo(() => reindexSeries(filtered), [filtered]);
   const metrics = useMemo(() => computeMetrics(filtered), [filtered]);
-
-  if (performance.isPending) {
-    return <PerformanceSkeleton />;
-  }
+  const isLoading = performance.isPending;
 
   if (performance.isError) {
     return (
@@ -214,6 +209,47 @@ export function PortfolioPerformancePanel() {
     );
   }
 
+  const controls = (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+            Benchmark
+          </span>
+          <SelectorPills
+            options={BENCHMARK_TICKERS}
+            value={benchmark}
+            onChange={setBenchmark}
+            minWidthClass="min-w-11"
+          />
+        </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+            Period
+          </span>
+          <SelectorPills options={PERFORMANCE_PERIODS} value={period} onChange={setPeriod} />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Indexed to 100 at period start · vs {benchmarkTicker}
+      </p>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5">
+        {controls}
+        <Skeleton className="h-[280px] w-full rounded-xl" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AvailabilityGuard
       available={performance.data?.available !== false && (performance.data?.series?.length ?? 0) > 0}
@@ -221,15 +257,13 @@ export function PortfolioPerformancePanel() {
       emptyLabel="Performance history unavailable"
     >
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            Indexed to 100 at period start · benchmark{" "}
-            {performance.data?.benchmark_ticker ?? "SPY"}
-          </p>
-          <PeriodSelector value={period} onChange={setPeriod} />
-        </div>
+        {controls}
 
-        <PerformanceChart data={chartData} period={period} />
+        <PerformanceChart
+          data={chartData}
+          period={period}
+          benchmarkTicker={benchmarkTicker}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-white/[0.06] bg-card/90 p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]">

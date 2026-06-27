@@ -15,17 +15,19 @@ import type {
   AlertsResponse,
   BriefResponse,
   Holding,
+  NavPoint,
   PortfolioAnalysisResponse,
   PortfolioPerformanceResponse,
   PortfolioResponse,
   ReportResponse,
 } from "./types";
+import type { BenchmarkTicker } from "@/lib/portfolio-performance";
 
 export const qk = {
   report: (ticker: string) => ["report", ticker] as const,
   portfolio: ["portfolio"] as const,
   analysis: ["portfolio", "analysis"] as const,
-  performance: ["portfolio", "performance"] as const,
+  performance: (benchmark: string) => ["portfolio", "performance", benchmark] as const,
   brief: ["portfolio", "brief"] as const,
   alerts: ["alerts"] as const,
   alertsCheck: ["alerts", "check"] as const,
@@ -86,18 +88,25 @@ export function usePortfolioAnalysis(opts?: QueryOpts<PortfolioAnalysisResponse>
   });
 }
 
-export function usePortfolioPerformance(opts?: QueryOpts<PortfolioPerformanceResponse>) {
+export function usePortfolioPerformance(
+  benchmark: BenchmarkTicker = "SPY",
+  opts?: QueryOpts<PortfolioPerformanceResponse>,
+) {
   return useQuery<PortfolioPerformanceResponse, Error>({
-    queryKey: qk.performance,
+    queryKey: qk.performance(benchmark),
     queryFn: async () => {
       try {
-        return await apiFetch<PortfolioPerformanceResponse>("/portfolio/performance");
+        const data = await apiFetch<PortfolioPerformanceResponse & LegacyPerformanceResponse>(
+          `/portfolio/performance?benchmark=${encodeURIComponent(benchmark)}`,
+        );
+        return normalizePerformanceResponse(data, benchmark);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           return {
             available: false,
             note: "Performance history unavailable",
             series: [],
+            benchmark_ticker: benchmark,
           };
         }
         throw err;
@@ -106,6 +115,43 @@ export function usePortfolioPerformance(opts?: QueryOpts<PortfolioPerformanceRes
     staleTime: 5 * 60_000,
     ...opts,
   });
+}
+
+type LegacyPerformanceResponse = {
+  nav?: { date: string; value: number }[];
+  spy?: { date: string; value: number }[];
+  benchmark?: string;
+};
+
+function normalizePerformanceResponse(
+  data: PortfolioPerformanceResponse & LegacyPerformanceResponse,
+  benchmark: BenchmarkTicker,
+): PortfolioPerformanceResponse {
+  if (data.series?.length) {
+    return {
+      ...data,
+      benchmark_ticker: data.benchmark_ticker ?? data.benchmark ?? benchmark,
+    };
+  }
+
+  const navPoints = data.nav ?? [];
+  const benchmarkPoints = data.spy ?? [];
+  if (!navPoints.length || !benchmarkPoints.length) {
+    return data;
+  }
+
+  const benchmarkByDate = new Map(benchmarkPoints.map((point) => [point.date, point.value]));
+  const series: NavPoint[] = navPoints.flatMap((point) => {
+    const benchmarkValue = benchmarkByDate.get(point.date);
+    if (benchmarkValue == null) return [];
+    return [{ date: point.date, nav: point.value, benchmark: benchmarkValue }];
+  });
+
+  return {
+    ...data,
+    series,
+    benchmark_ticker: data.benchmark_ticker ?? data.benchmark ?? benchmark,
+  };
 }
 
 export async function fetchBrief(options?: { force?: boolean; password?: string }) {
@@ -186,7 +232,7 @@ export function useSavePortfolio() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.portfolio });
       qc.invalidateQueries({ queryKey: qk.analysis });
-      qc.invalidateQueries({ queryKey: qk.performance });
+      qc.invalidateQueries({ queryKey: ["portfolio", "performance"] });
     },
   });
 }
