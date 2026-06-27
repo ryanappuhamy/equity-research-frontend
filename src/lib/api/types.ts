@@ -55,6 +55,17 @@ export interface PortfolioAnalysisResponse {
   risk: RiskAnalysis;
 }
 
+export interface NavPoint {
+  date: string;
+  nav: number;
+  benchmark: number;
+}
+
+export interface PortfolioPerformanceResponse extends Available {
+  series?: NavPoint[];
+  benchmark_ticker?: string;
+}
+
 export interface BriefResponse {
   portfolio: Holding[];
   brief: string;

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { PortfolioPerformancePanel } from "@/components/charts/portfolio-performance-panel";
 import { SectorAllocationChart } from "@/components/charts/sector-allocation-chart";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
@@ -344,6 +345,13 @@ export default function PortfolioPage() {
               >
                 <SectorAllocationChart positions={positions} />
               </AvailabilityGuard>
+            </DataCard>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Performance vs benchmark</SectionLabel>
+            <DataCard source="yfinance">
+              <PortfolioPerformancePanel />
             </DataCard>
           </div>
 

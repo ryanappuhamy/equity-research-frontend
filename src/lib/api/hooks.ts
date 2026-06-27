@@ -16,6 +16,7 @@ import type {
   BriefResponse,
   Holding,
   PortfolioAnalysisResponse,
+  PortfolioPerformanceResponse,
   PortfolioResponse,
   ReportResponse,
 } from "./types";
@@ -24,6 +25,7 @@ export const qk = {
   report: (ticker: string) => ["report", ticker] as const,
   portfolio: ["portfolio"] as const,
   analysis: ["portfolio", "analysis"] as const,
+  performance: ["portfolio", "performance"] as const,
   brief: ["portfolio", "brief"] as const,
   alerts: ["alerts"] as const,
   alertsCheck: ["alerts", "check"] as const,
@@ -80,6 +82,28 @@ export function usePortfolioAnalysis(opts?: QueryOpts<PortfolioAnalysisResponse>
   return useQuery<PortfolioAnalysisResponse, Error>({
     queryKey: qk.analysis,
     queryFn: () => apiFetch<PortfolioAnalysisResponse>("/portfolio/analysis"),
+    ...opts,
+  });
+}
+
+export function usePortfolioPerformance(opts?: QueryOpts<PortfolioPerformanceResponse>) {
+  return useQuery<PortfolioPerformanceResponse, Error>({
+    queryKey: qk.performance,
+    queryFn: async () => {
+      try {
+        return await apiFetch<PortfolioPerformanceResponse>("/portfolio/performance");
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          return {
+            available: false,
+            note: "Performance history unavailable",
+            series: [],
+          };
+        }
+        throw err;
+      }
+    },
+    staleTime: 5 * 60_000,
     ...opts,
   });
 }
@@ -162,6 +186,7 @@ export function useSavePortfolio() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.portfolio });
       qc.invalidateQueries({ queryKey: qk.analysis });
+      qc.invalidateQueries({ queryKey: qk.performance });
     },
   });
 }
