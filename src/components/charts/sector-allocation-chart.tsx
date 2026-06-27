@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Sector,
+  Tooltip,
+  type PieSectorDataItem,
+} from "recharts";
 
 import type { Holding } from "@/lib/api/types";
 import { fmtCurrency, fmtPercent } from "@/lib/format";
@@ -66,6 +74,10 @@ function SectorTooltip({
   );
 }
 
+function ActiveSector(props: PieSectorDataItem) {
+  return <Sector {...props} outerRadius={(props.outerRadius ?? 0) + 10} />;
+}
+
 export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
   const data = useMemo(() => groupBySector(positions), [positions]);
   const totalValue = useMemo(
@@ -104,6 +116,7 @@ export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
               paddingAngle={2}
               stroke="transparent"
               isAnimationActive={false}
+              activeShape={ActiveSector}
             >
               {data.map((slice) => (
                 <Cell key={slice.name} fill={slice.color} />
