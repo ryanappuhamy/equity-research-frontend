@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
+import { BriefMarkdown } from "@/components/data/brief-markdown";
 import { DataCard } from "@/components/data/data-card";
 import { InsiderActivityTable } from "@/components/data/insider-activity-table";
 import { ReportMetricCards } from "@/components/data/report-metric-cards";
@@ -241,7 +242,7 @@ export default function ResearchReportPage() {
             <div className="flex flex-col gap-3">
               <SectionLabel>AI research note</SectionLabel>
               <AICard model="claude-sonnet-4-6">
-                <p className="whitespace-pre-wrap leading-relaxed">{data.report}</p>
+                <BriefMarkdown content={data.report} />
               </AICard>
             </div>
           </>
