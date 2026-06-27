@@ -7,14 +7,16 @@ import type { Holding } from "@/lib/api/types";
 import { fmtCurrency, fmtPercent } from "@/lib/format";
 
 const SECTOR_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--up)",
-  "#e0894a",
+  "#3b82f6",
+  "#22d3ee",
   "#a78bfa",
+  "#f472b6",
+  "#fbbf24",
+  "#34d399",
+  "#fb7185",
+  "#818cf8",
+  "#38bdf8",
+  "#e879f9",
 ];
 
 type SectorSlice = {
@@ -55,9 +57,9 @@ function SectorTooltip({
 
   const slice = payload[0].payload;
   return (
-    <div className="rounded-lg border border-white/[0.08] bg-card px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium text-foreground">{slice.name}</p>
-      <p className="mt-1 tabular-nums text-muted-foreground">
+    <div className="rounded-lg border border-white/10 bg-[#0d1424] px-3.5 py-2.5 text-xs shadow-xl">
+      <p className="font-medium text-white">{slice.name}</p>
+      <p className="mt-1.5 tabular-nums text-muted-foreground">
         {fmtCurrency(slice.value)} · {fmtPercent(slice.pct)}
       </p>
     </div>
@@ -66,6 +68,10 @@ function SectorTooltip({
 
 export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
   const data = useMemo(() => groupBySector(positions), [positions]);
+  const totalValue = useMemo(
+    () => data.reduce((sum, slice) => sum + slice.value, 0),
+    [data],
+  );
   const hasValue = data.some((slice) => slice.value > 0);
 
   if (positions.length === 0) {
@@ -83,8 +89,8 @@ export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-10">
-      <div className="mx-auto h-[240px] w-full max-w-[280px] sm:h-[260px]">
+    <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12">
+      <div className="relative mx-auto h-[260px] w-full max-w-[260px] shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -93,7 +99,7 @@ export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius="58%"
+              innerRadius="62%"
               outerRadius="88%"
               paddingAngle={2}
               stroke="transparent"
@@ -106,21 +112,35 @@ export function SectorAllocationChart({ positions }: { positions: Holding[] }) {
             <Tooltip content={<SectorTooltip />} />
           </PieChart>
         </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
+            Total value
+          </span>
+          <span className="mt-1 text-2xl font-semibold tracking-tight tabular-nums text-white">
+            {fmtCurrency(totalValue, { compact: true })}
+          </span>
+        </div>
       </div>
 
-      <ul className="grid flex-1 grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
+      <ul className="flex min-w-0 flex-1 flex-col gap-3">
         {data.map((slice) => (
-          <li key={slice.name} className="flex items-center justify-between gap-3 text-sm">
-            <div className="flex min-w-0 items-center gap-2.5">
+          <li
+            key={slice.name}
+            className="flex items-center justify-between gap-4 border-b border-white/[0.04] pb-3 last:border-b-0 last:pb-0"
+          >
+            <div className="flex min-w-0 items-center gap-3">
               <span
-                className="size-2.5 shrink-0 rounded-full ring-2 ring-white/[0.06]"
+                className="size-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: slice.color }}
               />
-              <span className="truncate text-muted-foreground">{slice.name}</span>
+              <span className="truncate text-sm text-foreground">{slice.name}</span>
             </div>
-            <span className="shrink-0 tabular-nums text-foreground">
-              {fmtPercent(slice.pct, { digits: 1 })}
-            </span>
+            <div className="flex shrink-0 items-baseline gap-4 tabular-nums">
+              <span className="text-sm text-muted-foreground">{fmtCurrency(slice.value)}</span>
+              <span className="w-12 text-right text-sm font-medium text-foreground">
+                {fmtPercent(slice.pct, { digits: 1 })}
+              </span>
+            </div>
           </li>
         ))}
       </ul>

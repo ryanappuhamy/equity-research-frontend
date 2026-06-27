@@ -28,6 +28,8 @@ export type ChartPoint = {
   date: string;
   nav: number;
   benchmark: number;
+  rawNav: number;
+  rawBenchmark: number;
 };
 
 export type PerformanceMetrics = {
@@ -60,6 +62,8 @@ export function reindexSeries(series: NavPoint[]): ChartPoint[] {
     date: point.date,
     nav: nav0 > 0 ? (point.nav / nav0) * 100 : 100,
     benchmark: bench0 > 0 ? (point.benchmark / bench0) * 100 : 100,
+    rawNav: point.nav,
+    rawBenchmark: point.benchmark,
   }));
 }
 
