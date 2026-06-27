@@ -17,10 +17,16 @@ type NormalizedInsiderTransaction = {
 function parseAction(value: string | undefined): "Buy" | "Sell" {
   const normalized = (value ?? "").trim().toLowerCase();
   if (
+    normalized.includes("sell") ||
+    normalized.includes("sale") ||
+    normalized === "s"
+  ) {
+    return "Sell";
+  }
+  if (
     normalized.includes("buy") ||
     normalized.includes("purchase") ||
-    normalized === "p" ||
-    normalized === "a"
+    normalized === "p"
   ) {
     return "Buy";
   }
@@ -42,13 +48,14 @@ function formatAmount(amount: InsiderTransaction["amount"], value?: number | nul
 
 function formatDate(value: string | null | undefined): { label: string; sortDate: number } {
   if (!value) return { label: "—", sortDate: 0 };
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = new Date(`${value}T00:00:00`);
+  const date = Number.isNaN(parsed.getTime()) ? new Date(value) : parsed;
+  if (Number.isNaN(date.getTime())) {
     return { label: value, sortDate: 0 };
   }
   return {
-    label: new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(parsed),
-    sortDate: parsed.getTime(),
+    label: new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date),
+    sortDate: date.getTime(),
   };
 }
 
@@ -57,7 +64,7 @@ function normalizeTransaction(tx: InsiderTransaction): NormalizedInsiderTransact
   const role = tx.role ?? tx.title ?? "";
   const action = parseAction(tx.action ?? tx.transaction_type);
   const amountLabel = formatAmount(tx.amount, tx.dollar_value ?? tx.value);
-  const date = formatDate(tx.date ?? tx.filing_date ?? tx.transaction_date);
+  const date = formatDate(tx.date ?? tx.transaction_date ?? tx.filing_date);
 
   return {
     name,
@@ -71,9 +78,23 @@ function normalizeTransaction(tx: InsiderTransaction): NormalizedInsiderTransact
 
 export function getRecentTransactions(activity?: InsiderActivity): NormalizedInsiderTransaction[] {
   const rows = (activity?.transactions ?? []).map(normalizeTransaction);
-  return rows
-    .sort((a, b) => b.sortDate - a.sortDate)
-    .slice(0, MAX_TRANSACTIONS);
+  return rows.sort((a, b) => b.sortDate - a.sortDate).slice(0, MAX_TRANSACTIONS);
+}
+
+function ActionBadge({ action }: { action: "Buy" | "Sell" }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "min-w-11 justify-center",
+        action === "Buy"
+          ? "border-up/30 bg-up/10 text-up"
+          : "border-down/30 bg-down/10 text-down",
+      )}
+    >
+      {action}
+    </Badge>
+  );
 }
 
 export function InsiderActivityTable({ activity }: { activity?: InsiderActivity }) {
@@ -89,42 +110,35 @@ export function InsiderActivityTable({ activity }: { activity?: InsiderActivity 
         </p>
       )}
 
-      {transactions.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          No individual transactions available
-        </p>
-      ) : (
-        <ul className="divide-y divide-white/[0.04]">
-          {transactions.map((tx, index) => (
-            <li
-              key={`${tx.name}-${tx.dateLabel}-${index}`}
-              className="flex flex-col gap-3 py-3.5 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{tx.name}</p>
-                {tx.role && <p className="truncate text-xs text-muted-foreground">{tx.role}</p>}
-              </div>
+      {transactions.length > 0 && (
+        <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card/40">
+          <ul className="divide-y divide-white/[0.04]">
+            {transactions.map((tx, index) => (
+              <li
+                key={`${tx.name}-${tx.dateLabel}-${tx.action}-${index}`}
+                className="grid grid-cols-1 items-center gap-3 px-4 py-3.5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-6"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{tx.name}</p>
+                  {tx.role ? (
+                    <p className="truncate text-xs text-muted-foreground">{tx.role}</p>
+                  ) : null}
+                </div>
 
-              <div className="flex items-center gap-2 sm:justify-center">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    tx.action === "Buy"
-                      ? "border-up/30 bg-up/10 text-up"
-                      : "border-down/30 bg-down/10 text-down",
-                  )}
-                >
-                  {tx.action}
-                </Badge>
-                <span className="text-sm tabular-nums text-foreground/90">{tx.amountLabel}</span>
-              </div>
+                <div className="flex items-center gap-2.5 sm:justify-center">
+                  <ActionBadge action={tx.action} />
+                  <span className="text-sm font-medium tabular-nums text-foreground/90">
+                    {tx.amountLabel}
+                  </span>
+                </div>
 
-              <p className="shrink-0 text-sm tabular-nums text-muted-foreground sm:w-20 sm:text-right">
-                {tx.dateLabel}
-              </p>
-            </li>
-          ))}
-        </ul>
+                <p className="text-sm tabular-nums text-muted-foreground sm:min-w-[4.5rem] sm:text-right">
+                  {tx.dateLabel}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
