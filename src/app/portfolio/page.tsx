@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { SectorAllocationChart } from "@/components/charts/sector-allocation-chart";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { DataCard } from "@/components/data/data-card";
 import { DataTable, type Column } from "@/components/data/data-table";
@@ -329,6 +330,19 @@ export default function PortfolioPage() {
                   rows={positions}
                   getRowKey={(h) => h.ticker}
                 />
+              </AvailabilityGuard>
+            </DataCard>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Sector allocation</SectionLabel>
+            <DataCard source="yfinance">
+              <AvailabilityGuard
+                available={portfolio.data?.available}
+                note={portfolio.data?.note}
+                emptyLabel="Sector allocation unavailable"
+              >
+                <SectorAllocationChart positions={positions} />
               </AvailabilityGuard>
             </DataCard>
           </div>

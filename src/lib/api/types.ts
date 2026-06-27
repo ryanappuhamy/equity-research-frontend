@@ -17,6 +17,7 @@ export interface Holding {
   pnl?: number;
   pnl_pct?: number | null;
   weight?: number;
+  sector?: string | null;
 }
 
 export interface PortfolioResponse {
