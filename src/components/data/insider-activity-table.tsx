@@ -69,7 +69,7 @@ function normalizeTransaction(tx: InsiderTransaction): NormalizedInsiderTransact
   };
 }
 
-function getRecentTransactions(activity?: InsiderActivity): NormalizedInsiderTransaction[] {
+export function getRecentTransactions(activity?: InsiderActivity): NormalizedInsiderTransaction[] {
   const rows = (activity?.transactions ?? []).map(normalizeTransaction);
   return rows
     .sort((a, b) => b.sortDate - a.sortDate)

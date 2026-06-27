@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Download, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { AICard } from "@/components/data/ai-card";
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useClearReportCache, useReport } from "@/lib/api/hooks";
+import { downloadResearchReportPdf } from "@/lib/report-pdf";
 
 const RECENT_TICKERS_KEY = "recentTickers";
 const MAX_RECENT_TICKERS = 6;
@@ -111,6 +112,16 @@ export default function ResearchReportPage() {
     }
   }
 
+  function handleDownloadPdf() {
+    if (!data) return;
+    try {
+      downloadResearchReportPdf(data, companyName);
+      toast.success("PDF downloaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
+    }
+  }
+
   return (
     <Shell>
       <Topbar title="Research report" />
@@ -186,10 +197,14 @@ export default function ResearchReportPage() {
 
         {showResults && (
           <>
-            <div>
+            <div className="flex flex-wrap items-center gap-3">
               <Badge className="border-primary/30 bg-primary/15 text-[color:var(--accent-bright)]">
                 {data.ticker} — {companyName}
               </Badge>
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+                <Download className="size-4" />
+                Download PDF
+              </Button>
             </div>
 
             <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
