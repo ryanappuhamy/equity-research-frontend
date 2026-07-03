@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Download, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
+import { TradingViewEconomicCalendar } from "@/components/charts/tradingview-economic-calendar";
 import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
 import { BriefMarkdown } from "@/components/data/brief-markdown";
@@ -178,6 +179,13 @@ export default function ResearchReportPage() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <SectionLabel>Economic calendar · United States</SectionLabel>
+          <DataCard source="TradingView" contentClassName="p-3">
+            <TradingViewEconomicCalendar />
+          </DataCard>
         </div>
 
         {isError && (
