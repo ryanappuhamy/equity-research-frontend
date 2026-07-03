@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Briefcase, FileText, Mail } from "lucide-react";
+import { Bell, Briefcase, Calendar, FileText, Mail } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const NAV = [
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/brief", label: "Weekly brief", icon: Mail },
   { href: "/alerts", label: "Alerts", icon: Bell },
+  { href: "/macro", label: "Macro Calendar", icon: Calendar },
 ];
 
 export function Sidebar() {

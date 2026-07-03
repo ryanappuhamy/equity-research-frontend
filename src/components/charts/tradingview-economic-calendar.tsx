@@ -6,8 +6,8 @@ import { ResizableWidgetContainer } from "@/components/ui/resizable-widget-conta
 
 const SCRIPT_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
 
-const DEFAULT_CALENDAR_HEIGHT_PX = 500;
-const CALENDAR_HEIGHT_STORAGE_KEY = "tradingview-economic-calendar-height";
+const DEFAULT_CALENDAR_HEIGHT_PX = 800;
+const CALENDAR_HEIGHT_STORAGE_KEY = "tradingview-macro-calendar-height";
 
 function buildWidgetConfig() {
   return {
