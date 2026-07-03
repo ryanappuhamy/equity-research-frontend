@@ -208,7 +208,11 @@ export default function ResearchReportPage() {
               </Button>
             </div>
 
-            <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
+            <ReportMetricCards
+              ticker={data.ticker}
+              fundamentals={fundamentals}
+              priceStats={priceStats}
+            />
 
             {metricUnavailable && (
               <div className="-mt-1 flex justify-center">
