@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Download, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
+import { TradingViewAdvancedChart } from "@/components/charts/tradingview-advanced-chart";
 import { TradingViewEconomicCalendar } from "@/components/charts/tradingview-economic-calendar";
 import { AICard } from "@/components/data/ai-card";
 import { AvailabilityGuard } from "@/components/data/availability-guard";
@@ -181,13 +182,6 @@ export default function ResearchReportPage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <SectionLabel>Economic calendar · United States</SectionLabel>
-          <DataCard source="TradingView" contentClassName="p-3">
-            <TradingViewEconomicCalendar />
-          </DataCard>
-        </div>
-
         {isError && (
           <p className="text-sm text-destructive">
             {error instanceof Error ? error.message : "Failed to load report"}
@@ -216,11 +210,9 @@ export default function ResearchReportPage() {
               </Button>
             </div>
 
-            <ReportMetricCards
-              ticker={data.ticker}
-              fundamentals={fundamentals}
-              priceStats={priceStats}
-            />
+            <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
+
+            <TradingViewAdvancedChart ticker={data.ticker} />
 
             {metricUnavailable && (
               <div className="-mt-1 flex justify-center">
@@ -256,6 +248,13 @@ export default function ResearchReportPage() {
               <AICard model="claude-sonnet-4-6">
                 <BriefMarkdown content={data.report} />
               </AICard>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <SectionLabel>Macro calendar · United States</SectionLabel>
+              <DataCard source="TradingView" contentClassName="p-3">
+                <TradingViewEconomicCalendar />
+              </DataCard>
             </div>
           </>
         )}

@@ -1,5 +1,4 @@
 import type { Fundamentals, PriceStats } from "@/lib/api/types";
-import { TradingViewAdvancedChart } from "@/components/charts/tradingview-advanced-chart";
 import {
   fmtCompactUsd,
   fmtMetric,
@@ -111,11 +110,9 @@ function PriceCard({ priceStats }: { priceStats?: PriceStats }) {
 }
 
 export function ReportMetricCards({
-  ticker,
   fundamentals,
   priceStats,
 }: {
-  ticker?: string;
   fundamentals?: Fundamentals;
   priceStats?: PriceStats;
 }) {
@@ -157,8 +154,6 @@ export function ReportMetricCards({
           />
         </FintechCard>
       </div>
-
-      {ticker ? <TradingViewAdvancedChart ticker={ticker} /> : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <FintechCard title="Profitability">
