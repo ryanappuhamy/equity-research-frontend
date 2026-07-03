@@ -2,10 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
+import { ResizableWidgetContainer } from "@/components/ui/resizable-widget-container";
+
 const SCRIPT_SRC =
   "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
 
-const CHART_HEIGHT_PX = 550;
+const DEFAULT_CHART_HEIGHT_PX = 550;
+const CHART_HEIGHT_STORAGE_KEY = "tradingview-advanced-chart-height";
 
 function toTradingViewSymbol(ticker: string): string {
   const normalized = ticker.trim().toUpperCase();
@@ -66,10 +69,12 @@ export function TradingViewAdvancedChart({ ticker }: { ticker: string }) {
   }, [ticker]);
 
   return (
-    <div
-      ref={containerRef}
-      className="tradingview-widget-container w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#0a0f1d]"
-      style={{ height: CHART_HEIGHT_PX }}
-    />
+    <ResizableWidgetContainer
+      storageKey={CHART_HEIGHT_STORAGE_KEY}
+      defaultHeight={DEFAULT_CHART_HEIGHT_PX}
+      className="rounded-xl border border-white/[0.06] bg-[#0a0f1d]"
+    >
+      <div ref={containerRef} className="tradingview-widget-container h-full w-full" />
+    </ResizableWidgetContainer>
   );
 }

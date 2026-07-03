@@ -2,9 +2,12 @@
 
 import { useEffect, useRef } from "react";
 
+import { ResizableWidgetContainer } from "@/components/ui/resizable-widget-container";
+
 const SCRIPT_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
 
-const CALENDAR_HEIGHT_PX = 500;
+const DEFAULT_CALENDAR_HEIGHT_PX = 500;
+const CALENDAR_HEIGHT_STORAGE_KEY = "tradingview-economic-calendar-height";
 
 function buildWidgetConfig() {
   return {
@@ -48,10 +51,12 @@ export function TradingViewEconomicCalendar() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="tradingview-widget-container w-full overflow-hidden rounded-lg border border-white/[0.04] bg-[#0a0f1d]"
-      style={{ height: CALENDAR_HEIGHT_PX }}
-    />
+    <ResizableWidgetContainer
+      storageKey={CALENDAR_HEIGHT_STORAGE_KEY}
+      defaultHeight={DEFAULT_CALENDAR_HEIGHT_PX}
+      className="rounded-lg border border-white/[0.04] bg-[#0a0f1d]"
+    >
+      <div ref={containerRef} className="tradingview-widget-container h-full w-full" />
+    </ResizableWidgetContainer>
   );
 }
