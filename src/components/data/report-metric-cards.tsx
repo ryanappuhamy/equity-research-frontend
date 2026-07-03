@@ -122,44 +122,46 @@ export function ReportMetricCards({
   const trailingPe = fundamentals?.trailing_pe ?? fundamentals?.pe_ttm;
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <PriceCard priceStats={priceStats} />
-        {ticker ? <TradingViewAdvancedChart ticker={ticker} /> : null}
+
+        <FintechCard title="Valuation">
+          <MetricRow
+            label="Forward P/E"
+            value={fmtMetric(fmtMultiple(fundamentals?.forward_pe))}
+          />
+          <MetricRow
+            label="Trailing P/E"
+            value={fmtMetric(fmtMultiple(trailingPe))}
+          />
+          <MetricRow label="PEG Ratio" value={fmtMetric(fmtMultiple(fundamentals?.peg_ratio))} />
+          <MetricRow label="EV/EBITDA" value={fmtMetric(fmtMultiple(fundamentals?.ev_ebitda))} />
+        </FintechCard>
+
+        <FintechCard title="Growth">
+          <MetricRow
+            label="Revenue YoY"
+            value={fmtMetric(fmtPercent(fundamentals?.revenue_growth_yoy, { signed: true }))}
+            valueClassName={signedColor(fundamentals?.revenue_growth_yoy)}
+          />
+          <MetricRow
+            label="EPS YoY"
+            value={fmtMetric(fmtPercent(fundamentals?.eps_growth_yoy, { signed: true }))}
+            valueClassName={signedColor(fundamentals?.eps_growth_yoy)}
+          />
+          <MetricRow
+            label="Revenue Forward"
+            value={fmtMetric(fmtPercent(fundamentals?.revenue_forward, { signed: true }))}
+            valueClassName={signedColor(fundamentals?.revenue_forward)}
+          />
+        </FintechCard>
       </div>
 
-      <FintechCard title="Valuation">
-        <MetricRow
-          label="Forward P/E"
-          value={fmtMetric(fmtMultiple(fundamentals?.forward_pe))}
-        />
-        <MetricRow
-          label="Trailing P/E"
-          value={fmtMetric(fmtMultiple(trailingPe))}
-        />
-        <MetricRow label="PEG Ratio" value={fmtMetric(fmtMultiple(fundamentals?.peg_ratio))} />
-        <MetricRow label="EV/EBITDA" value={fmtMetric(fmtMultiple(fundamentals?.ev_ebitda))} />
-      </FintechCard>
+      {ticker ? <TradingViewAdvancedChart ticker={ticker} /> : null}
 
-      <FintechCard title="Growth">
-        <MetricRow
-          label="Revenue YoY"
-          value={fmtMetric(fmtPercent(fundamentals?.revenue_growth_yoy, { signed: true }))}
-          valueClassName={signedColor(fundamentals?.revenue_growth_yoy)}
-        />
-        <MetricRow
-          label="EPS YoY"
-          value={fmtMetric(fmtPercent(fundamentals?.eps_growth_yoy, { signed: true }))}
-          valueClassName={signedColor(fundamentals?.eps_growth_yoy)}
-        />
-        <MetricRow
-          label="Revenue Forward"
-          value={fmtMetric(fmtPercent(fundamentals?.revenue_forward, { signed: true }))}
-          valueClassName={signedColor(fundamentals?.revenue_forward)}
-        />
-      </FintechCard>
-
-      <FintechCard title="Profitability">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <FintechCard title="Profitability">
         <MetricRow
           label="Gross Margin"
           value={fmtMetric(fmtPercent(fundamentals?.gross_margin))}
@@ -199,6 +201,7 @@ export function ReportMetricCards({
           yoy={fundamentals?.net_income_yoy}
         />
       </FintechCard>
+      </div>
     </div>
   );
 }

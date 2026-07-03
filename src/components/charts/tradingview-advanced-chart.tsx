@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 const SCRIPT_SRC =
   "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
 
-const CHART_HEIGHT_PX = 400;
+const CHART_HEIGHT_PX = 550;
 
 function toTradingViewSymbol(ticker: string): string {
   const normalized = ticker.trim().toUpperCase();
@@ -68,7 +68,7 @@ export function TradingViewAdvancedChart({ ticker }: { ticker: string }) {
   return (
     <div
       ref={containerRef}
-      className="tradingview-widget-container h-[400px] w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#0a0f1d]"
+      className="tradingview-widget-container w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#0a0f1d]"
       style={{ height: CHART_HEIGHT_PX }}
     />
   );

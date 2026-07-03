@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const SCRIPT_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-events.js";
 
-const CALENDAR_HEIGHT_PX = 320;
+const CALENDAR_HEIGHT_PX = 500;
 
 function buildWidgetConfig() {
   return {
