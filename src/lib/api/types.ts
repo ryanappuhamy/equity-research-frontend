@@ -189,6 +189,7 @@ export interface ReportData {
 export interface ReportResponse {
   ticker: string;
   report: string;
+  report_model?: string | null;
   data: ReportData;
   available?: boolean;
   note?: string;

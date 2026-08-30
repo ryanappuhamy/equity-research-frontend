@@ -237,7 +237,7 @@ export default function ResearchReportPage() {
 
             <div className="flex flex-col gap-3">
               <SectionLabel>AI research note</SectionLabel>
-              <AICard model="claude-sonnet-4-6">
+              <AICard model={data.report_model ?? undefined}>
                 <BriefMarkdown content={data.report} />
               </AICard>
             </div>
