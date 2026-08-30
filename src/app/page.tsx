@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
-import { Download, Loader2, Search } from "lucide-react";
+import { Download, Loader2, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { TradingViewAdvancedChart } from "@/components/charts/tradingview-advanced-chart";
@@ -200,27 +200,29 @@ export default function ResearchReportPage() {
                 <Download className="size-4" />
                 Download PDF
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRetryLoad}
+                disabled={clearReportCache.isPending || isFetching}
+                title="Svuota la cache e rigenera il report da zero"
+              >
+                <RefreshCw
+                  className={`size-4 ${clearReportCache.isPending || isFetching ? "animate-spin" : ""}`}
+                />
+                {clearReportCache.isPending || isFetching ? "Rigenero…" : "Rigenera"}
+              </Button>
             </div>
+
+            {metricUnavailable && (
+              <p className="-mt-1 text-xs text-muted-foreground/70">
+                Alcuni dati non sono disponibili — prova &ldquo;Rigenera&rdquo; per rifare la ricerca.
+              </p>
+            )}
 
             <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
 
             <TradingViewAdvancedChart ticker={data.ticker} />
-
-            {metricUnavailable && (
-              <div className="-mt-1 flex justify-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto px-2 py-1 text-xs font-normal text-muted-foreground/70 hover:text-muted-foreground"
-                  onClick={handleRetryLoad}
-                  disabled={clearReportCache.isPending || isFetching}
-                >
-                  {clearReportCache.isPending || isFetching
-                    ? "Retrying…"
-                    : "Something didn't load correctly? Retry"}
-                </Button>
-              </div>
-            )}
 
             <div className="flex flex-col gap-3">
               <SectionLabel>Insider activity — ultimi 90 giorni</SectionLabel>
