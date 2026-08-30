@@ -101,13 +101,9 @@ export default function ResearchReportPage() {
   async function handleRetryLoad() {
     const password = window.prompt("Enter password to clear cache and retry:");
     if (!password) return;
-    if (password !== "ExtraPls") {
-      toast.error("Incorrect password");
-      return;
-    }
 
     try {
-      await clearReportCache.mutateAsync(ticker);
+      await clearReportCache.mutateAsync({ ticker, password });
       await refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear cache and retry");

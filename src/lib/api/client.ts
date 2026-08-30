@@ -9,6 +9,19 @@ export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "https://equity-research-platform-ryanappuhamy.onrender.com";
 
+// Sent as X-API-Key when the backend has API_SECRET set. NEXT_PUBLIC_* is
+// visible in the browser bundle — this deters bare-URL/script abuse, it is not
+// per-user auth. Header is only attached when the value is present.
+export const API_SECRET = process.env.NEXT_PUBLIC_API_SECRET ?? "";
+export const FORCE_PASSWORD = process.env.NEXT_PUBLIC_FORCE_PASSWORD ?? "";
+
+export function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    ...(API_SECRET ? { "X-API-Key": API_SECRET } : {}),
+    ...(extra ?? {}),
+  };
+}
+
 const DEFAULT_TIMEOUT_MS = 90_000;
 const RETRIES = 2;
 
@@ -31,7 +44,7 @@ async function once<T>(
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
       signal: controller.signal,
-      headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+      headers: { "Content-Type": "application/json", ...authHeaders(), ...(init.headers ?? {}) },
     });
     if (!res.ok) {
       let detail = res.statusText;
@@ -76,7 +89,7 @@ export async function warmUp(): Promise<void> {
   if (warmed) return;
   warmed = true;
   try {
-    await fetch(`${API_BASE}/docs`, { method: "GET", mode: "no-cors" });
+    await fetch(`${API_BASE}/health`, { method: "GET", mode: "no-cors" });
   } catch {
     warmed = false; // allow a later retry if it failed
   }

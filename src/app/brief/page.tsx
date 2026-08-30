@@ -100,13 +100,9 @@ export default function WeeklyBriefPage() {
   async function handleRegenerate() {
     const password = window.prompt("Enter password to regenerate brief:");
     if (!password) return;
-    if (password !== "ExtraPls") {
-      toast.error("Incorrect password");
-      return;
-    }
 
     try {
-      await regenerateBrief.mutateAsync("ExtraPls");
+      await regenerateBrief.mutateAsync(password);
       toast.success("Brief regenerated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to regenerate brief");

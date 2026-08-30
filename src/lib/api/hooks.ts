@@ -7,7 +7,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 
-import { ApiError, apiFetch } from "./client";
+import { API_BASE, ApiError, apiFetch, authHeaders, FORCE_PASSWORD } from "./client";
 import type {
   Alert,
   AlertMetric,
@@ -49,10 +49,10 @@ export function useReport(ticker: string, peers?: string, opts?: QueryOpts<Repor
 export function useClearReportCache() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (ticker: string) => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/report/${ticker}/cache`, {
+    mutationFn: async ({ ticker, password }: { ticker: string; password?: string }) => {
+      const res = await fetch(`${API_BASE}/report/${ticker}/cache`, {
         method: "DELETE",
-        headers: { "X-Force-Password": "ExtraPls" },
+        headers: authHeaders({ "X-Force-Password": password ?? FORCE_PASSWORD }),
       });
       if (!res.ok) {
         let detail = res.statusText;
@@ -66,7 +66,7 @@ export function useClearReportCache() {
       }
       return (await res.json()) as { deleted: boolean; ticker: string };
     },
-    onSuccess: (_data, ticker) => {
+    onSuccess: (_data, { ticker }) => {
       qc.removeQueries({ queryKey: qk.report(ticker) });
     },
   });
@@ -156,8 +156,8 @@ function normalizePerformanceResponse(
 
 export async function fetchBrief(options?: { force?: boolean; password?: string }) {
   if (options?.force) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/brief?force=true`, {
-      headers: { "X-Force-Password": "ExtraPls" },
+    const res = await fetch(`${API_BASE}/portfolio/brief?force=true`, {
+      headers: authHeaders({ "X-Force-Password": options.password ?? FORCE_PASSWORD }),
     });
     if (!res.ok) {
       let detail = res.statusText;
