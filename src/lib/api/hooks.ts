@@ -198,7 +198,7 @@ export function useGenerateBrief() {
 export function useRegenerateBrief() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (password: string) => fetchBrief({ force: true, password }),
+    mutationFn: (password?: string) => fetchBrief({ force: true, password }),
     onSuccess: (data) => {
       qc.setQueryData(qk.brief, data);
     },

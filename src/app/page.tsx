@@ -99,11 +99,8 @@ export default function ResearchReportPage() {
     priceStats?.available === false || fundamentals?.available === false;
 
   async function handleRetryLoad() {
-    const password = window.prompt("Enter password to clear cache and retry:");
-    if (!password) return;
-
     try {
-      await clearReportCache.mutateAsync({ ticker, password });
+      await clearReportCache.mutateAsync({ ticker });
       await refetch();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clear cache and retry");
