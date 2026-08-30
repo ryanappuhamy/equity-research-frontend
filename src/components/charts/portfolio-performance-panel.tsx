@@ -305,6 +305,10 @@ export function PortfolioPerformancePanel() {
         </div>
       </div>
       <ChartLegend benchmarkTicker={benchmarkTicker} />
+      <p className="text-[11px] leading-snug text-muted-foreground/60">
+        Backtest delle posizioni attuali: assume che tu abbia sempre detenuto queste
+        quantità. Non è lo storico reale del conto (non tracciamo le date di acquisto).
+      </p>
     </div>
   );
 
