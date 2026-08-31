@@ -91,9 +91,11 @@ export default function AlertsPage() {
   const createAlert = useCreateAlert();
   const deleteAlert = useDeleteAlert();
 
-  const isLoading = alertsQuery.isPending || checkQuery.isPending;
-  const isError = alertsQuery.isError || checkQuery.isError;
-  const error = alertsQuery.error ?? checkQuery.error;
+  // Only block on the alert list. /alerts/check runs the full pipeline per
+  // ticker and can take a while — let it enrich the "Stato" column in place.
+  const isLoading = alertsQuery.isPending;
+  const isError = alertsQuery.isError;
+  const error = alertsQuery.error;
 
   const triggeredById = useMemo(() => {
     const map = new Map<number, TriggeredAlert>();
@@ -238,6 +240,13 @@ export default function AlertsPage() {
               />
             </AvailabilityGuard>
           </DataCard>
+
+          {checkQuery.isPending && alerts.length > 0 && (
+            <p className="-mt-3 flex items-center gap-2 text-xs text-muted-foreground/70">
+              <Loader2 className="size-3 animate-spin" />
+              Verifica delle condizioni in corso…
+            </p>
+          )}
 
           <div className="flex flex-col gap-3">
             <SectionLabel>Aggiungi alert</SectionLabel>
