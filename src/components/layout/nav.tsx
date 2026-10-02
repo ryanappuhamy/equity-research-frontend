@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Bell, Briefcase, Calendar, FileText, Mail } from "lucide-react";
+import { Bell, Briefcase, Calendar, ChartColumnIncreasing, FileText, Mail } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Research", icon: FileText },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
+  { href: "/simulatore", label: "Simulatore", icon: ChartColumnIncreasing },
   { href: "/brief", label: "Brief", icon: Mail },
   { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/macro", label: "Macro", icon: Calendar },

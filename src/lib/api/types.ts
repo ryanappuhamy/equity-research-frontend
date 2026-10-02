@@ -91,6 +91,11 @@ export interface PortfolioInsightsResponse extends Available {
   holdings: HoldingInsight[];
 }
 
+export interface MonthlyHistoryResponse extends Available {
+  ticker: string;
+  points: { month: string; close: number }[];
+}
+
 export interface BriefResponse {
   portfolio: Holding[];
   brief: string;

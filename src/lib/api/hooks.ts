@@ -16,6 +16,7 @@ import type {
   BriefResponse,
   Holding,
   NavPoint,
+  MonthlyHistoryResponse,
   PortfolioAnalysisResponse,
   PortfolioInsightsResponse,
   PortfolioPerformanceResponse,
@@ -29,6 +30,7 @@ export const qk = {
   portfolio: ["portfolio"] as const,
   analysis: ["portfolio", "analysis"] as const,
   insights: ["portfolio", "insights"] as const,
+  monthly: (ticker: string) => ["market", "monthly", ticker] as const,
   performance: (benchmark: string) => ["portfolio", "performance", benchmark] as const,
   brief: ["portfolio", "brief"] as const,
   alerts: ["alerts"] as const,
@@ -96,6 +98,15 @@ export function usePortfolioInsights(opts?: QueryOpts<PortfolioInsightsResponse>
     queryFn: () => apiFetch<PortfolioInsightsResponse>("/portfolio/insights"),
     staleTime: 5 * 60_000,
     ...opts,
+  });
+}
+
+export function useMonthlyHistory(ticker: string) {
+  return useQuery<MonthlyHistoryResponse, Error>({
+    queryKey: qk.monthly(ticker),
+    queryFn: () => apiFetch<MonthlyHistoryResponse>(`/market/monthly?ticker=${encodeURIComponent(ticker)}`),
+    enabled: !!ticker,
+    staleTime: 60 * 60_000,
   });
 }
 

@@ -31,15 +31,15 @@ export function DataCard({
       )}
     >
       {hasHeader && (
-        <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
+        <header className="flex items-center justify-between gap-3 px-[18px] pb-3 pt-4">
           <div className="flex items-center gap-2">
-            {title && <h3 className="text-sm font-medium text-foreground/90">{title}</h3>}
+            {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
             <SourceBadge source={source} />
           </div>
           {action}
         </header>
       )}
-      <div className={cn("px-5 pb-5", !hasHeader && "pt-5", contentClassName)}>{children}</div>
+      <div className={cn("px-[18px] pb-[18px]", !hasHeader && "pt-[18px]", contentClassName)}>{children}</div>
     </section>
   );
 }

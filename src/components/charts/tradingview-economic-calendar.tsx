@@ -14,11 +14,11 @@ function buildWidgetConfig() {
     width: "100%",
     height: "100%",
     colorTheme: "dark",
-    isTransparent: false,
-    locale: "en",
+    isTransparent: true,
+    locale: "it",
     importanceFilter: "0,1",
     countryFilter: "us",
-    backgroundColor: "#0a0f1d",
+    backgroundColor: "#121419",
   };
 }
 

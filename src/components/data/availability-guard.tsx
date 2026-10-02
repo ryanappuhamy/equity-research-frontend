@@ -16,7 +16,7 @@ export function AvailabilityGuard({
 }) {
   if (available === false) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
+      <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-secondary/40 px-4 py-8 text-center">
         <CircleDashed className="size-5 text-muted-foreground" />
         <p className="text-sm font-medium text-foreground/70">{emptyLabel}</p>
         {note && <p className="max-w-xs text-xs text-muted-foreground">{note}</p>}

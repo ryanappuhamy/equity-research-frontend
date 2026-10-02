@@ -1,25 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Loader2, Trash2 } from "lucide-react";
+import { Bell, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AvailabilityGuard } from "@/components/data/availability-guard";
-import { DataCard } from "@/components/data/data-card";
-import { DataTable, type Column } from "@/components/data/data-table";
 import { SectionLabel } from "@/components/data/section-label";
 import { Shell } from "@/components/layout/shell";
 import { Topbar } from "@/components/layout/topbar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAlerts,
@@ -39,23 +27,23 @@ type AlertPreset = {
 };
 
 const ALERT_PRESETS: AlertPreset[] = [
-  { value: "price:above", label: "price above", metric: "price", operator: "above" },
-  { value: "price:below", label: "price below", metric: "price", operator: "below" },
-  { value: "pe_ttm:above", label: "P/E above", metric: "pe_ttm", operator: "above" },
-  { value: "pe_ttm:below", label: "P/E below", metric: "pe_ttm", operator: "below" },
+  { value: "price:above", label: "Prezzo sopra", metric: "price", operator: "above" },
+  { value: "price:below", label: "Prezzo sotto", metric: "price", operator: "below" },
+  { value: "pe_ttm:above", label: "P/E sopra", metric: "pe_ttm", operator: "above" },
+  { value: "pe_ttm:below", label: "P/E sotto", metric: "pe_ttm", operator: "below" },
   {
     value: "insider_filings:above",
-    label: "insider buy >",
+    label: "Operazioni insider oltre",
     metric: "insider_filings",
     operator: "above",
   },
 ];
 
 const METRIC_LABELS: Record<AlertMetric, string> = {
-  price: "Price",
+  price: "Prezzo",
   pe_ttm: "P/E",
-  revenue_growth_yoy: "Revenue growth",
-  insider_filings: "Insider filings",
+  revenue_growth_yoy: "Crescita dei ricavi",
+  insider_filings: "Operazioni insider",
 };
 
 function formatCondition(alert: Alert): string {
@@ -70,13 +58,13 @@ function formatCondition(alert: Alert): string {
           ? fmtPercent(alert.threshold)
           : fmtNumber(alert.threshold);
 
-  return `${label} ${alert.operator} ${threshold}`;
+  return `${label} ${alert.operator === "above" ? "sopra" : "sotto"} ${threshold}`;
 }
 
 function AlertsSkeleton() {
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <Skeleton className="h-48 w-full" />
+    <div className="flex flex-col gap-6 px-6 pb-6 pt-4">
+      <Skeleton className="h-48 w-full rounded-[22px]" />
     </div>
   );
 }
@@ -105,78 +93,12 @@ export default function AlertsPage() {
     return map;
   }, [checkQuery.data?.triggered]);
 
-  const columns: Column<Alert>[] = useMemo(
-    () => [
-      {
-        key: "ticker",
-        header: "Ticker",
-        cell: (alert) => <span className="font-medium text-foreground">{alert.ticker}</span>,
-      },
-      {
-        key: "condition",
-        header: "Condizione",
-        cell: (alert) => (
-          <span className="text-muted-foreground">{formatCondition(alert)}</span>
-        ),
-      },
-      {
-        key: "current",
-        header: "Stato",
-        cell: (alert) => {
-          const triggered = triggeredById.get(alert.id);
-          return (
-            <span className="text-muted-foreground">
-              {triggered?.explanation ?? "Within threshold"}
-            </span>
-          );
-        },
-      },
-      {
-        key: "status",
-        header: "",
-        align: "right",
-        cell: (alert) => {
-          const isTriggered = alert.triggered || triggeredById.has(alert.id);
-          return (
-            <Badge
-              variant="outline"
-              className={cn(
-                isTriggered
-                  ? "border-[#e0894a]/40 bg-[#e0894a]/10 text-[#e0894a]"
-                  : "border-up/30 bg-up/10 text-up",
-              )}
-            >
-              {isTriggered ? "Triggerato" : "OK"}
-            </Badge>
-          );
-        },
-      },
-      {
-        key: "actions",
-        header: "",
-        align: "right",
-        cell: (alert) => (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={`Delete alert for ${alert.ticker}`}
-            disabled={deleteAlert.isPending}
-            onClick={() => handleDelete(alert.id)}
-          >
-            <Trash2 className="size-4 text-muted-foreground" />
-          </Button>
-        ),
-      },
-    ],
-    [triggeredById, deleteAlert.isPending],
-  );
-
   async function handleDelete(id: number) {
     try {
       await deleteAlert.mutateAsync(id);
-      toast.success("Alert deleted");
+      toast.success("Alert eliminato");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete alert");
+      toast.error(err instanceof Error ? err.message : "Non è stato possibile eliminare l'alert");
     }
   }
 
@@ -185,7 +107,7 @@ export default function AlertsPage() {
     const parsedThreshold = Number(threshold);
 
     if (!nextTicker || !threshold) {
-      toast.error("Inserisci ticker e soglia");
+      toast.error("Inserisci titolo e soglia");
       return;
     }
     if (!Number.isFinite(parsedThreshold)) {
@@ -202,95 +124,130 @@ export default function AlertsPage() {
         operator: selected.operator,
         threshold: parsedThreshold,
       });
-      toast.success(`Alert created for ${nextTicker}`);
+      toast.success(`Alert creato per ${nextTicker}`);
       setTicker("");
       setThreshold("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create alert");
+      toast.error(err instanceof Error ? err.message : "Non è stato possibile creare l'alert");
     }
   }
 
   const alerts = alertsQuery.data?.alerts ?? [];
 
+  const field =
+    "h-11 rounded-full border border-border bg-secondary px-4 text-[15px] text-foreground outline-none transition-colors placeholder:text-faint focus:border-primary";
+  const triggeredCount = alerts.filter((a) => a.triggered || triggeredById.has(a.id)).length;
+
   return (
     <Shell>
-      <Topbar title="Alert attivi" />
+      <Topbar
+        title="Alert"
+        subtitle={
+          alerts.length
+            ? `${alerts.length} attivi${triggeredCount ? ` · ${triggeredCount} scattati` : ""}`
+            : "Ricevi un segnale quando prezzo o P/E di un titolo superano una soglia."
+        }
+      />
 
       {isError && (
-        <p className="px-6 pt-4 text-sm text-destructive">
-          {error instanceof Error ? error.message : "Failed to load alerts"}
-        </p>
+        <p className="px-6 pt-2 text-sm text-destructive">{error instanceof Error ? error.message : "Impossibile caricare gli alert"}</p>
       )}
 
       {isLoading ? (
         <AlertsSkeleton />
       ) : (
-        <div className="flex flex-col gap-6 p-6">
-          <DataCard contentClassName="px-2">
-            <AvailabilityGuard
-              available={alertsQuery.data?.available}
-              note={alertsQuery.data?.note}
-              emptyLabel="Alerts unavailable"
-            >
-              <DataTable
-                columns={columns}
-                rows={alerts}
-                getRowKey={(alert) => alert.id}
-                empty="No alerts configured"
-              />
+        <div className="flex flex-col gap-7 px-6 pb-6 pt-4">
+          <div className="animate-rise rounded-[22px] border border-border bg-card px-3.5 py-1.5">
+            <AvailabilityGuard available={alertsQuery.data?.available} note={alertsQuery.data?.note} emptyLabel="Alert non disponibili">
+              {alerts.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center">
+                  <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary">
+                    <Bell className="size-5" />
+                  </span>
+                  <p className="font-semibold">Nessun alert</p>
+                  <p className="text-sm text-muted-foreground">Creane uno qui sotto.</p>
+                </div>
+              ) : (
+                alerts.map((alert) => {
+                  const hit = triggeredById.get(alert.id);
+                  const isTriggered = alert.triggered || !!hit;
+                  return (
+                    <div key={alert.id} className="grid grid-cols-[44px_minmax(0,1fr)_auto_auto] items-center gap-3.5 border-t border-border px-1 py-3.5 first:border-t-0">
+                      <span className="grid size-11 place-items-center rounded-[13px] bg-secondary text-[13px] font-bold tracking-tight">
+                        {alert.ticker.slice(0, 4)}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="font-semibold">
+                          {alert.ticker} · {formatCondition(alert)}
+                        </div>
+                        <div className="truncate text-[13px] text-muted-foreground">
+                          {hit?.explanation ?? (checkQuery.isPending ? "Verifica in corso…" : "Condizione non raggiunta")}
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          "whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+                          isTriggered ? "bg-warn/15 text-warn" : "bg-up/15 text-up",
+                        )}
+                      >
+                        {isTriggered ? "Scattato" : "OK"}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Elimina l'alert su ${alert.ticker}`}
+                        disabled={deleteAlert.isPending}
+                        onClick={() => handleDelete(alert.id)}
+                        className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-down"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
             </AvailabilityGuard>
-          </DataCard>
-
-          {checkQuery.isPending && alerts.length > 0 && (
-            <p className="-mt-3 flex items-center gap-2 text-xs text-muted-foreground/70">
-              <Loader2 className="size-3 animate-spin" />
-              Verifica delle condizioni in corso…
-            </p>
-          )}
-
-          <div className="flex flex-col gap-3">
-            <SectionLabel>Aggiungi alert</SectionLabel>
-            <div className="flex flex-wrap items-center gap-3">
-              <Input
-                placeholder="Ticker"
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-                className="w-32"
-              />
-              <Select value={preset} onValueChange={(v) => v && setPreset(v)}>
-                <SelectTrigger className="w-44">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ALERT_PRESETS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Soglia"
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                inputMode="decimal"
-                className="w-28"
-              />
-              <Button onClick={handleAdd} disabled={createAlert.isPending}>
-                {createAlert.isPending ? (
-                  <>
-                    <Loader2 className="animate-spin" />
-                    Aggiungi…
-                  </>
-                ) : (
-                  <>
-                    Aggiungi
-                    <ArrowUpRight className="size-4" />
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
+
+          <section className="animate-rise flex flex-col gap-3" style={{ "--i": 1 } as React.CSSProperties}>
+            <SectionLabel>Nuovo alert</SectionLabel>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAdd();
+              }}
+              className="flex flex-col gap-4 rounded-[22px] border border-border bg-card p-[18px]"
+            >
+              <div className="flex flex-wrap gap-1.5">
+                {ALERT_PRESETS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setPreset(option.value)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all",
+                      option.value === preset
+                        ? "border-primary bg-primary/15 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <input placeholder="Titolo (es. AAPL)" value={ticker} onChange={(e) => setTicker(e.target.value)} className={cn(field, "w-44")} autoComplete="off" />
+                <input placeholder="Soglia" value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="decimal" className={cn(field, "w-32")} />
+                <button
+                  type="submit"
+                  disabled={createAlert.isPending}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 font-semibold text-background transition-transform active:scale-[.98] disabled:opacity-60"
+                >
+                  {createAlert.isPending && <Loader2 className="size-4 animate-spin" />}
+                  Crea alert
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
       )}
     </Shell>

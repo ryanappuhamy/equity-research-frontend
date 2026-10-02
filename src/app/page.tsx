@@ -13,13 +13,12 @@ import { InsiderActivityTable } from "@/components/data/insider-activity-table";
 import { ReportMetricCards } from "@/components/data/report-metric-cards";
 import { ResearchReportLoading } from "@/components/data/research-report-loading";
 import { SectionLabel } from "@/components/data/section-label";
-import { EmptyScreen } from "@/components/layout/empty-screen";
 import { Shell } from "@/components/layout/shell";
 import { Topbar } from "@/components/layout/topbar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useClearReportCache, useReport } from "@/lib/api/hooks";
+import { CountUp } from "@/components/portfolio/count-up";
+import { pct, toneClass, usd } from "@/components/portfolio/fmt";
+import { useClearReportCache, usePortfolio, useReport } from "@/lib/api/hooks";
+import { cn } from "@/lib/utils";
 import { downloadResearchReportPdf } from "@/lib/report-pdf";
 
 const RECENT_TICKERS_KEY = "recentTickers";
@@ -52,6 +51,8 @@ export default function ResearchReportPage() {
   const [input, setInput] = useState("");
   const [ticker, setTicker] = useState("");
   const [recentTickers, setRecentTickers] = useState<string[]>([]);
+  const { data: portfolio } = usePortfolio();
+  const ownTickers = (portfolio?.positions ?? []).map((p) => p.ticker.toUpperCase());
 
   const { data, isFetching, isError, error, refetch } = useReport(ticker, undefined, {
     enabled: !!ticker,
@@ -123,132 +124,153 @@ export default function ResearchReportPage() {
     }
   }
 
+  const suggestions = [...new Set([...ownTickers, ...recentTickers, "AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "TSLA"])].slice(0, 10);
+  const price = priceStats?.last_price;
+  const ret1y = priceStats?.return_1y;
+  const lo52 = priceStats?.low_52w;
+  const hi52 = priceStats?.high_52w;
+  const rangePos = price != null && lo52 && hi52 ? Math.max(0, Math.min(1, (price - lo52) / (hi52 - lo52))) : null;
+  const pill = "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-[13px] font-semibold transition-colors hover:border-muted-foreground disabled:opacity-50";
+
   return (
     <Shell>
-      <Topbar title="Research report" />
+      <Topbar title="Research" subtitle="Analisi completa di un titolo: prezzo, fondamentali, insider e nota AI." />
 
-      <div className="flex flex-col gap-5 p-6">
-        <div className="flex flex-col gap-3">
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-3 sm:flex-row sm:items-center"
-          >
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                name="ticker"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Search ticker… (e.g. AAPL, NVDA)"
-                className="pl-8"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </div>
-            <Button type="submit" disabled={isFetching}>
-              {isFetching ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Loading…
-                </>
-              ) : (
-                "Research"
-              )}
-            </Button>
+      <div className="flex flex-col gap-7 px-6 pb-6 pt-4">
+        <div className="animate-rise flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="relative">
+            <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              name="ticker"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Cerca un titolo, per esempio AAPL o NVDA"
+              autoComplete="off"
+              spellCheck={false}
+              className="h-14 w-full rounded-full border border-border bg-card pl-14 pr-36 text-[16px] text-foreground outline-none transition-colors placeholder:text-faint focus:border-primary"
+            />
+            <button
+              type="submit"
+              disabled={isFetching}
+              className="absolute right-2 top-1/2 inline-flex h-10 -translate-y-1/2 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-bold text-background transition-transform active:scale-[.97] disabled:opacity-60"
+            >
+              {isFetching ? <Loader2 className="size-4 animate-spin" /> : null}
+              {isFetching ? "Analizzo…" : "Analizza"}
+            </button>
           </form>
-
-          {recentTickers.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">Recent searches</span>
-              {recentTickers.map((recent) => (
-                <Badge
-                  key={recent}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted"
-                  render={
-                    <button
-                      type="button"
-                      onClick={() => searchTicker(recent)}
-                      disabled={isFetching}
-                    />
-                  }
-                >
-                  {recent}
-                </Badge>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {suggestions.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => searchTicker(t)}
+                disabled={isFetching}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors disabled:opacity-50",
+                  t === ticker ? "border-primary bg-primary/15 text-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isError && (
-          <p className="text-sm text-destructive">
-            {error instanceof Error ? error.message : "Failed to load report"}
-          </p>
+          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Impossibile caricare il report"}</p>
         )}
 
         {!ticker && (
-          <EmptyScreen
-            icon={Search}
-            title="Search a ticker"
-            description="Enter a symbol and click Research to run the full pipeline via GET /report/{ticker}."
-          />
+          <div className="animate-rise flex flex-col gap-2 rounded-[22px] border border-border bg-card p-6" style={{ "--i": 1 } as React.CSSProperties}>
+            <h2 className="text-xl font-semibold tracking-tight">Scegli un titolo da analizzare</h2>
+            <p className="max-w-[60ch] text-[15px] text-muted-foreground">
+              Il report mette insieme prezzo e andamento, valutazione, crescita, redditività, solidità finanziaria, acquisti e vendite degli insider e una nota scritta dall&apos;AI. La prima analisi di un titolo può richiedere fino a un minuto.
+            </p>
+          </div>
         )}
 
         {ticker && isFetching && <ResearchReportLoading active />}
 
         {showResults && (
           <>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="border-primary/30 bg-primary/15 text-[color:var(--accent-bright)]">
-                {data.ticker} — {companyName}
-              </Badge>
-              <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
-                <Download className="size-4" />
-                Download PDF
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRetryLoad}
-                disabled={clearReportCache.isPending || isFetching}
-                title="Svuota la cache e rigenera il report da zero"
-              >
-                <RefreshCw
-                  className={`size-4 ${clearReportCache.isPending || isFetching ? "animate-spin" : ""}`}
-                />
-                {clearReportCache.isPending || isFetching ? "Rigenero…" : "Rigenera"}
-              </Button>
+            <div className="animate-rise flex flex-wrap items-start justify-between gap-4">
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <span className="text-[13px] font-medium text-muted-foreground">
+                  {data.ticker} · {companyName}
+                </span>
+                {price != null ? (
+                  <CountUp
+                    value={price}
+                    format={(v) => usd(v)}
+                    className="text-[clamp(40px,8vw,64px)] font-semibold leading-none tracking-[-0.035em]"
+                  />
+                ) : (
+                  <span className="text-4xl font-semibold">—</span>
+                )}
+                {ret1y != null && !Number.isNaN(ret1y) && (
+                  <span className={cn("mt-1 text-[15px] font-semibold", toneClass(ret1y))}>
+                    {ret1y >= 0 ? "▲" : "▼"} {pct(ret1y)} <span className="font-medium text-muted-foreground">nell&apos;ultimo anno</span>
+                  </span>
+                )}
+                {rangePos != null && (
+                  <div className="mt-3 w-[min(320px,80vw)]">
+                    <div className="relative h-1.5 rounded-full bg-secondary">
+                      <i className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-background bg-foreground transition-[left] duration-700" style={{ left: `${rangePos * 100}%` }} />
+                    </div>
+                    <div className="mt-1.5 flex justify-between font-mono text-[11px] text-faint">
+                      <span>min 52 sett. {usd(lo52!, 0)}</span>
+                      <span>max {usd(hi52!, 0)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={handleDownloadPdf} className={pill}>
+                  <Download className="size-4" /> Scarica PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRetryLoad}
+                  disabled={clearReportCache.isPending || isFetching}
+                  title="Svuota la cache e rigenera il report da zero"
+                  className={pill}
+                >
+                  <RefreshCw className={cn("size-4", (clearReportCache.isPending || isFetching) && "animate-spin")} />
+                  {clearReportCache.isPending || isFetching ? "Rigenero…" : "Rigenera"}
+                </button>
+              </div>
             </div>
 
             {metricUnavailable && (
-              <p className="-mt-1 text-xs text-muted-foreground/70">
-                Alcuni dati non sono disponibili — prova &ldquo;Rigenera&rdquo; per rifare la ricerca.
+              <p className="-mt-3 text-[13px] text-muted-foreground">
+                Alcuni dati non sono disponibili: prova &ldquo;Rigenera&rdquo; per rifare la ricerca.
               </p>
             )}
 
-            <ReportMetricCards fundamentals={fundamentals} priceStats={priceStats} />
-
-            <TradingViewAdvancedChart ticker={data.ticker} />
-
-            <div className="flex flex-col gap-3">
-              <SectionLabel>Insider activity — ultimi 90 giorni</SectionLabel>
-              <DataCard source="SEC EDGAR">
-                <AvailabilityGuard
-                  available={insider?.available}
-                  note={insider?.note}
-                  emptyLabel="Insider data unavailable"
-                >
-                  <InsiderActivityTable activity={insider} />
-                </AvailabilityGuard>
-              </DataCard>
+            <div className="animate-rise overflow-hidden rounded-[22px] border border-border bg-card" style={{ "--i": 1 } as React.CSSProperties}>
+              <TradingViewAdvancedChart ticker={data.ticker} />
             </div>
 
-            <div className="flex flex-col gap-3">
-              <SectionLabel>AI research note</SectionLabel>
+            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 2 } as React.CSSProperties}>
+              <SectionLabel>Fondamentali</SectionLabel>
+              <ReportMetricCards fundamentals={fundamentals} />
+            </section>
+
+            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 3 } as React.CSSProperties}>
+              <SectionLabel>Nota di ricerca</SectionLabel>
               <AICard model={data.report_model ?? undefined}>
                 <BriefMarkdown content={data.report} />
               </AICard>
-            </div>
+            </section>
+
+            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 4 } as React.CSSProperties}>
+              <SectionLabel>Insider: ultimi 90 giorni</SectionLabel>
+              <DataCard source="SEC EDGAR">
+                <AvailabilityGuard available={insider?.available} note={insider?.note} emptyLabel="Dati insider non disponibili">
+                  <InsiderActivityTable activity={insider} />
+                </AvailabilityGuard>
+              </DataCard>
+            </section>
           </>
         )}
       </div>
