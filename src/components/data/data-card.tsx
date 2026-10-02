@@ -25,7 +25,7 @@ export function DataCard({
   return (
     <section
       className={cn(
-        "surface-sheen rounded-xl border border-border bg-card transition-shadow",
+        "rounded-[22px] border border-border bg-card transition-shadow",
         glow && "glow-soft",
         className,
       )}

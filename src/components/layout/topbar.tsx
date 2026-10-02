@@ -15,10 +15,10 @@ export function Topbar({
   actions?: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4">
+    <header className="flex flex-wrap items-center justify-between gap-4 px-6 pb-2 pt-6">
       <div className="min-w-0">
         <div className="flex items-center gap-2.5">
-          <h1 className="text-lg font-medium tracking-tight">{title}</h1>
+          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.025em] text-balance">{title}</h1>
           {demo && (
             <Badge
               variant="outline"
@@ -34,7 +34,7 @@ export function Topbar({
         {actions}
         <div className="relative hidden sm:block">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search ticker…" className="w-56 pl-8" />
+          <Input placeholder="Search ticker…" className="w-56 rounded-full pl-8" />
         </div>
       </div>
     </header>

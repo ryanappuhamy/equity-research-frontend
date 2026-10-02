@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// Small uppercase muted header used between blocks (e.g. "Insider activity").
+// Section heading used between blocks (e.g. "Insider activity").
 export function SectionLabel({
   children,
   className,
@@ -11,7 +11,7 @@ export function SectionLabel({
   return (
     <p
       className={cn(
-        "text-xs font-medium uppercase tracking-wider text-muted-foreground",
+        "text-[19px] font-semibold tracking-tight text-foreground text-balance",
         className,
       )}
     >
