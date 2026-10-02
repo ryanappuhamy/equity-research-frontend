@@ -66,6 +66,31 @@ export interface PortfolioPerformanceResponse extends Available {
   benchmark_ticker?: string;
 }
 
+export interface HoldingInsight {
+  ticker: string;
+  name?: string | null;
+  logo?: string | null;
+  price?: number | null;
+  prev_close?: number | null;
+  change_pct?: number | null;
+  high_52w?: number | null;
+  low_52w?: number | null;
+  pe?: number | null;
+  forward_pe?: number | null;
+  dividend_yield?: number | null;
+  target_mean?: number | null;
+  analysts?: { strongBuy: number; buy: number; hold: number; sell: number; strongSell: number };
+  next_earnings?: { date: string; hour?: string | null };
+  news?: { headline: string; source?: string | null; url?: string | null; datetime?: number | null }[];
+  spark?: number[];
+}
+
+export interface PortfolioInsightsResponse extends Available {
+  as_of?: string;
+  index_pe?: number | null;
+  holdings: HoldingInsight[];
+}
+
 export interface BriefResponse {
   portfolio: Holding[];
   brief: string;

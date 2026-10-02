@@ -17,6 +17,7 @@ import type {
   Holding,
   NavPoint,
   PortfolioAnalysisResponse,
+  PortfolioInsightsResponse,
   PortfolioPerformanceResponse,
   PortfolioResponse,
   ReportResponse,
@@ -27,6 +28,7 @@ export const qk = {
   report: (ticker: string) => ["report", ticker] as const,
   portfolio: ["portfolio"] as const,
   analysis: ["portfolio", "analysis"] as const,
+  insights: ["portfolio", "insights"] as const,
   performance: (benchmark: string) => ["portfolio", "performance", benchmark] as const,
   brief: ["portfolio", "brief"] as const,
   alerts: ["alerts"] as const,
@@ -84,6 +86,15 @@ export function usePortfolioAnalysis(opts?: QueryOpts<PortfolioAnalysisResponse>
   return useQuery<PortfolioAnalysisResponse, Error>({
     queryKey: qk.analysis,
     queryFn: () => apiFetch<PortfolioAnalysisResponse>("/portfolio/analysis"),
+    ...opts,
+  });
+}
+
+export function usePortfolioInsights(opts?: QueryOpts<PortfolioInsightsResponse>) {
+  return useQuery<PortfolioInsightsResponse, Error>({
+    queryKey: qk.insights,
+    queryFn: () => apiFetch<PortfolioInsightsResponse>("/portfolio/insights"),
+    staleTime: 5 * 60_000,
     ...opts,
   });
 }
@@ -233,6 +244,7 @@ export function useSavePortfolio() {
       qc.invalidateQueries({ queryKey: qk.portfolio });
       qc.invalidateQueries({ queryKey: qk.analysis });
       qc.invalidateQueries({ queryKey: ["portfolio", "performance"] });
+      qc.invalidateQueries({ queryKey: qk.insights });
     },
   });
 }

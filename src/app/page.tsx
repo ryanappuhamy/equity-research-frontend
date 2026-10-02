@@ -60,6 +60,12 @@ export default function ResearchReportPage() {
 
   useEffect(() => {
     setRecentTickers(readRecentTickers());
+    // Deep link from the Portfolio page: /?ticker=NVDA opens that report.
+    const fromLink = new URLSearchParams(window.location.search).get("ticker")?.trim().toUpperCase();
+    if (fromLink) {
+      setInput(fromLink);
+      setTicker(fromLink);
+    }
   }, []);
 
   useEffect(() => {
