@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Research", icon: FileText },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
-  { href: "/simulatore", label: "Simulatore", icon: ChartColumnIncreasing },
+  { href: "/simulator", label: "Simulator", icon: ChartColumnIncreasing },
   { href: "/brief", label: "Brief", icon: Mail },
   { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/macro", label: "Macro", icon: Calendar },
@@ -42,7 +42,7 @@ export function Nav() {
   return (
     <nav
       ref={navRef}
-      aria-label="Sezioni"
+      aria-label="Sections"
       className={cn(
         "relative flex gap-0.5 rounded-full border border-border bg-card p-1",
         "max-md:fixed max-md:inset-x-3 max-md:bottom-[calc(10px+env(safe-area-inset-bottom,0px))] max-md:z-40",

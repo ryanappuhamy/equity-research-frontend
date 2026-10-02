@@ -24,7 +24,7 @@ function buildWidgetConfig(ticker: string) {
     timezone: "Etc/UTC",
     theme: "dark",
     style: "1",
-    locale: "it",
+    locale: "en",
     backgroundColor: "#121419",
     gridColor: "rgba(255, 255, 255, 0.06)",
     enable_publishing: false,

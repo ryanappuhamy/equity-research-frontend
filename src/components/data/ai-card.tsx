@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 // DataCard (accent border + model badge) so the user always knows what is
 // objective data vs what is AI analysis.
 export function AICard({
-  title = "Analisi AI",
+  title = "AI analysis",
   model,
   className,
   children,

@@ -32,26 +32,26 @@ import type { BenchmarkTicker } from "@/lib/portfolio-performance";
 import { cn } from "@/lib/utils";
 
 const PERIODS = [
-  { label: "1S", days: 5 },
+  { label: "1W", days: 5 },
   { label: "1M", days: 21 },
   { label: "6M", days: 126 },
-  { label: "1A", days: 252 },
-  { label: "5A", days: 0 },
+  { label: "1Y", days: 252 },
+  { label: "5Y", days: 0 },
 ] as const;
 
 const BENCHMARKS: { t: BenchmarkTicker; name: string; desc: string }[] = [
-  { t: "SPY", name: "S&P 500", desc: "SPY · 500 aziende USA" },
-  { t: "URTH", name: "MSCI World", desc: "URTH · paesi sviluppati" },
-  { t: "VT", name: "All-World", desc: "VT · tutto il mondo" },
-  { t: "QQQ", name: "Nasdaq 100", desc: "QQQ · tech e crescita USA" },
+  { t: "SPY", name: "S&P 500", desc: "SPY · 500 largest US companies" },
+  { t: "URTH", name: "MSCI World", desc: "URTH · developed markets" },
+  { t: "VT", name: "All-World", desc: "VT · the whole world" },
+  { t: "QQQ", name: "Nasdaq 100", desc: "QQQ · US tech and growth" },
 ];
 
 const PERIOD_NAME: Record<number, string> = {
-  5: "nell'ultima settimana",
-  21: "nell'ultimo mese",
-  126: "negli ultimi 6 mesi",
-  252: "nell'ultimo anno",
-  0: "negli ultimi 5 anni",
+  5: "over the past week",
+  21: "over the past month",
+  126: "over the past 6 months",
+  252: "over the past year",
+  0: "over the past 5 years",
 };
 
 const bigMoney = (v: number) => {
@@ -125,8 +125,8 @@ export default function PortfolioPage() {
       .filter((h) => h.ticker.toUpperCase() !== ticker)
       .map(({ ticker, shares, avg_cost_price }) => ({ ticker, shares, avg_cost_price }));
     save.mutate(next, {
-      onSuccess: () => toast.success(`${ticker} rimosso`),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Non è stato possibile salvare"),
+      onSuccess: () => toast.success(`${ticker} removed`),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save the portfolio"),
     });
   };
 
@@ -134,7 +134,7 @@ export default function PortfolioPage() {
     <Shell>
       <div className="flex flex-col gap-7 px-6 pb-6 pt-6">
         {isError && (
-          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Impossibile caricare il portafoglio"}</p>
+          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Could not load the portfolio"}</p>
         )}
 
         {isLoading ? (
@@ -147,7 +147,7 @@ export default function PortfolioPage() {
             <div className="animate-rise flex items-start justify-between gap-4" style={{ "--i": 0 } as React.CSSProperties}>
               <div className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-[13px] font-medium text-muted-foreground">
-                  {scrub == null ? "Valore del portafoglio" : "Valore simulato"}
+                  {scrub == null ? "Portfolio value" : "Simulated value"}
                 </span>
                 <CountUp
                   value={scrub == null ? total : pv[scrub]}
@@ -160,17 +160,17 @@ export default function PortfolioPage() {
                     <>
                       <span className={toneClass(dayChange)}>
                         {dayChange >= 0 ? "▲" : "▼"} {signedUsd(dayChange)} ({pct(dayChange / (total - dayChange), 2)}){" "}
-                        <span className="font-medium text-muted-foreground">oggi</span>
+                        <span className="font-medium text-muted-foreground">today</span>
                       </span>
                       <span className={toneClass(total - cost)}>
                         {signedUsd(total - cost)} ({pct(total / cost - 1)}){" "}
-                        <span className="font-medium text-muted-foreground">dall&apos;acquisto</span>
+                        <span className="font-medium text-muted-foreground">since purchase</span>
                       </span>
                     </>
                   ) : (
                     <span className={toneClass(pv[scrub] - pv[0])}>
                       {pv[scrub] >= pv[0] ? "▲" : "▼"} {signedUsd(pv[scrub] - pv[0])} ({pct(pv[scrub] / pv[0] - 1, 2)}){" "}
-                      <span className="font-medium text-muted-foreground">nel periodo</span>
+                      <span className="font-medium text-muted-foreground">in this period</span>
                     </span>
                   )}
                 </div>
@@ -182,7 +182,7 @@ export default function PortfolioPage() {
               </div>
               <button
                 type="button"
-                aria-label="Aggiungi posizione"
+                aria-label="Add position"
                 onClick={() => setSheetOpen(true)}
                 className="grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-background transition-transform duration-200 hover:rotate-90 hover:scale-105"
               >
@@ -196,7 +196,7 @@ export default function PortfolioPage() {
                 {pv.length > 1 ? (
                   <LineChart
                     key={`${period}-${bench}`}
-                    ariaLabel="Andamento del portafoglio"
+                    ariaLabel="Portfolio value over time"
                     labels={window_.map((p) => p.date)}
                     series={[
                       { values: pv, color: lineColor, area: true, width: 2.4 },
@@ -225,17 +225,17 @@ export default function PortfolioPage() {
                   ))}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Toggle checked={showBench} onChange={setShowBench} label="Confronta con" />
+                  <Toggle checked={showBench} onChange={setShowBench} label="Compare with" />
                   <BenchmarkPicker value={bench} onChange={setBench} disabled={!showBench} />
                 </div>
               </div>
               {pv.length > 1 && (
                 <p className="mt-3 text-sm text-muted-foreground [&_b]:font-semibold [&_b]:text-foreground">
-                  Portafoglio <b className={toneClass(pr)}>{pct(pr)}</b>
+                  Portfolio <b className={toneClass(pr)}>{pct(pr)}</b>
                   {showBench ? (
                     <>
-                      {" "}contro {benchName} <b>{pct(br)}</b> {PERIOD_NAME[period]}: {pr - br >= 0 ? "stai battendo" : "sei sotto"} l&apos;indice di{" "}
-                      <b>{Math.abs((pr - br) * 100).toFixed(1).replace(".", ",")} punti</b>.
+                      {" "}vs {benchName} <b>{pct(br)}</b> {PERIOD_NAME[period]}: you are {pr - br >= 0 ? "beating" : "trailing"} the index by{" "}
+                      <b>{Math.abs((pr - br) * 100).toFixed(1)} points</b>.
                     </>
                   ) : (
                     <> {PERIOD_NAME[period]}.</>
@@ -244,31 +244,31 @@ export default function PortfolioPage() {
               )}
             </div>
 
-            <Section i={2} title="Le tue posizioni" sub={`${positions.length} titoli`}>
+            <Section i={2} title="Your positions" sub={`${positions.length} holdings`}>
               <Holdings positions={positions} onRemove={removePosition} />
             </Section>
 
-            <Section i={3} title="Salute del portafoglio" sub="ultimi 12 mesi">
+            <Section i={3} title="Portfolio health" sub="last 12 months">
               <HealthCards positions={positions} stats={stats} risk={analysis?.risk} benchName="S&P 500" indexPe={insights?.index_pe ?? null} />
             </Section>
 
-            <Section i={4} title="Da dove arriva il guadagno" sub="P&L non realizzato">
+            <Section i={4} title="Where your gains come from" sub="unrealized P&L">
               <Contribution positions={positions} />
             </Section>
 
-            <Section i={5} title="Tasse se vendessi oggi" sub="stima">
+            <Section i={5} title="Taxes if you sold today" sub="estimate">
               <TaxCard positions={positions} />
             </Section>
 
             <div className="animate-rise grid grid-cols-2 gap-3 max-[680px]:grid-cols-1" style={{ "--i": 6 } as React.CSSProperties}>
               <div className="flex min-w-0 flex-col gap-3">
-                <SectionLabel>Informazioni</SectionLabel>
+                <SectionLabel>Updates</SectionLabel>
                 <div className="rounded-[22px] border border-border bg-card p-[18px]">
                   <InfoList positions={positions} />
                 </div>
               </div>
               <div className="flex min-w-0 flex-col gap-3">
-                <SectionLabel>Notizie sui tuoi titoli</SectionLabel>
+                <SectionLabel>News on your holdings</SectionLabel>
                 <div className="rounded-[22px] border border-border bg-card p-[18px]">
                   <NewsList positions={positions} asOf={insights?.as_of} />
                 </div>
@@ -280,7 +280,7 @@ export default function PortfolioPage() {
             </div>
 
             <p className="text-[12.5px] text-faint">
-              Il grafico ricostruisce il valore con le posizioni attuali: le date di acquisto non sono ancora salvate.
+              The chart rebuilds the value from your current positions: purchase dates are not stored yet.
             </p>
           </>
         )}
@@ -299,10 +299,10 @@ export default function PortfolioPage() {
           ];
           save.mutate(next, {
             onSuccess: () => {
-              toast.success(`${p.ticker} salvato`);
+              toast.success(`${p.ticker} saved`);
               setSheetOpen(false);
             },
-            onError: (e) => toast.error(e instanceof Error ? e.message : "Non è stato possibile salvare"),
+            onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save the portfolio"),
           });
         }}
       />
@@ -418,8 +418,8 @@ function AddPositionSheet({
     const t = ticker.trim().toUpperCase();
     const s = Number(shares);
     const p = Number(price);
-    if (!t) return toast.error("Inserisci il simbolo del titolo, per esempio AAPL");
-    if (!(s > 0) || !(p > 0)) return toast.error("Quantità e prezzo devono essere maggiori di zero");
+    if (!t) return toast.error("Enter a ticker symbol, for example AAPL");
+    if (!(s > 0) || !(p > 0)) return toast.error("Shares and price must be greater than zero");
     onSave({ ticker: t, shares: s, avg_cost_price: p });
   };
 
@@ -440,19 +440,19 @@ function AddPositionSheet({
         )}
       >
         <div className="mx-auto mb-3.5 h-[5px] w-10 rounded-full bg-border" />
-        <h3 id="add-title" className="text-xl font-semibold tracking-tight">Aggiungi posizione</h3>
-        <p className="text-xs text-faint">Se il titolo è già nel portafoglio, quantità e prezzo medio vengono aggiornati.</p>
+        <h3 id="add-title" className="text-xl font-semibold tracking-tight">Add position</h3>
+        <p className="text-xs text-faint">If you already hold this ticker, its shares and average cost are updated.</p>
         <form onSubmit={submit} className="mt-3.5 grid grid-cols-2 gap-3">
           <label className="col-span-2 flex flex-col gap-1.5 text-[12.5px] text-muted-foreground">
-            Titolo
+            Ticker
             <input value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="AAPL" autoComplete="off" className={field} />
           </label>
           <label className="flex flex-col gap-1.5 text-[12.5px] text-muted-foreground">
-            Quantità
+            Shares
             <input value={shares} onChange={(e) => setShares(e.target.value)} type="number" min="0" step="any" placeholder="10" className={field} />
           </label>
           <label className="flex flex-col gap-1.5 text-[12.5px] text-muted-foreground">
-            Prezzo medio ($)
+            Average cost ($)
             <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="0" step="any" placeholder="150" className={field} />
           </label>
           <button
@@ -460,7 +460,7 @@ function AddPositionSheet({
             disabled={saving}
             className="col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-[14px] bg-foreground py-3.5 font-bold text-background transition-transform active:scale-[.98] disabled:opacity-60"
           >
-            {saving && <Loader2 className="size-4 animate-spin" />} Salva posizione
+            {saving && <Loader2 className="size-4 animate-spin" />} Save position
           </button>
         </form>
       </div>
@@ -471,10 +471,10 @@ function AddPositionSheet({
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-start gap-3 py-16">
-      <h2 className="text-[28px] font-semibold tracking-tight">Il portafoglio è vuoto</h2>
-      <p className="max-w-[48ch] text-muted-foreground">Aggiungi il primo titolo con quantità e prezzo medio di acquisto per vedere valore, rendimento e rischio.</p>
+      <h2 className="text-[28px] font-semibold tracking-tight">Your portfolio is empty</h2>
+      <p className="max-w-[48ch] text-muted-foreground">Add your first holding with shares and average cost to see value, return and risk.</p>
       <button type="button" onClick={onAdd} className="rounded-full bg-foreground px-5 py-2.5 font-semibold text-background">
-        Aggiungi posizione
+        Add position
       </button>
     </div>
   );

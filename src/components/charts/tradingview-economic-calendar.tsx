@@ -15,7 +15,7 @@ function buildWidgetConfig() {
     height: "100%",
     colorTheme: "dark",
     isTransparent: true,
-    locale: "it",
+    locale: "en",
     importanceFilter: "0,1",
     countryFilter: "us",
     backgroundColor: "#121419",

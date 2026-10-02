@@ -79,7 +79,7 @@ function Row({ p, onRemove }: { p: Pos; onRemove: (ticker: string) => void }) {
         <span className="min-w-0">
           <span className="block font-semibold">{p.ticker}</span>
           <span className="block truncate text-[13px] text-muted-foreground">
-            {p.shares} azioni · {pct(p.weight, 1, false)} del totale
+            {p.shares} shares · {pct(p.weight, 1, false)} of portfolio
           </span>
         </span>
         <Sparkline values={spark} />
@@ -99,26 +99,26 @@ function Row({ p, onRemove }: { p: Pos; onRemove: (ticker: string) => void }) {
       >
         <div className="overflow-hidden">
           <div className="grid grid-cols-4 gap-x-[18px] gap-y-3.5 pb-[18px] pl-[62px] pr-1 pt-1 max-md:grid-cols-2 max-md:pl-1">
-            <Kv k="Guadagno non realizzato">
+            <Kv k="Unrealized gain">
               <span className={toneClass(p.gain)}>{signedUsd(p.gain)}</span>{" "}
               <small className="text-xs font-medium text-muted-foreground">{pct(p.value / p.cost - 1)}</small>
             </Kv>
-            <Kv k="Prezzo medio → attuale">
+            <Kv k="Avg cost → price">
               {usd(p.avg)} → {usd(p.price)}
             </Kv>
-            <Kv k="P/E attuale · atteso">
+            <Kv k="P/E trailing · forward">
               {ins?.pe ? ins.pe.toFixed(1) : "—"}{" "}
               <small className="text-xs font-medium text-muted-foreground">· {ins?.forward_pe ? ins.forward_pe.toFixed(1) : "—"}</small>
             </Kv>
-            <Kv k="Prossima trimestrale">
+            <Kv k="Next earnings">
               {earn ? fmtDate(earn) : "—"}{" "}
-              {earn && <small className="text-xs font-medium text-muted-foreground">tra {daysUntil(earn)} giorni</small>}
+              {earn && <small className="text-xs font-medium text-muted-foreground">in {daysUntil(earn)} days</small>}
             </Kv>
             {a && total ? (
               <div className="col-span-2 min-w-0">
                 <div className="text-xs text-muted-foreground">
-                  Analisti ({total}): {Math.round(buy * 100)}% compra · {Math.round(hold * 100)}% tieni ·{" "}
-                  {Math.round(sell * 100)}% vendi
+                  Analysts ({total}): {Math.round(buy * 100)}% buy · {Math.round(hold * 100)}% hold ·{" "}
+                  {Math.round(sell * 100)}% sell
                 </div>
                 <div className="mt-2 flex h-1.5 gap-0.5 overflow-hidden rounded-full">
                   <span className="bg-up" style={{ flexGrow: buy }} />
@@ -127,16 +127,16 @@ function Row({ p, onRemove }: { p: Pos; onRemove: (ticker: string) => void }) {
                 </div>
               </div>
             ) : (
-              <Kv k="Analisti" className="col-span-2">
-                <small className="text-xs font-medium text-muted-foreground">non applicabile agli ETF</small>
+              <Kv k="Analysts" className="col-span-2">
+                <small className="text-xs font-medium text-muted-foreground">not applicable to ETFs</small>
               </Kv>
             )}
-            <Kv k="Prezzo obiettivo medio">
+            <Kv k="Avg price target">
               {ins?.target_mean ? usd(ins.target_mean) : "—"}{" "}
               {upside != null && <small className={cn("text-xs font-semibold", toneClass(upside))}>{pct(upside)}</small>}
             </Kv>
             <div className="min-w-0">
-              <div className="text-xs text-muted-foreground">Minimo · massimo 52 sett.</div>
+              <div className="text-xs text-muted-foreground">52-week low · high</div>
               {range != null ? (
                 <>
                   <div className="relative mt-2.5 h-1.5 rounded-full bg-secondary">
@@ -157,7 +157,7 @@ function Row({ p, onRemove }: { p: Pos; onRemove: (ticker: string) => void }) {
             <div className="col-span-full flex flex-wrap items-center gap-4">
               {p.sector !== "ETF" && (
                 <Link href={`/?ticker=${p.ticker}`} className="text-[13px] font-semibold text-primary hover:underline">
-                  Apri il report di ricerca su {p.ticker} →
+                  Open the {p.ticker} research report →
                 </Link>
               )}
               <button
@@ -165,7 +165,7 @@ function Row({ p, onRemove }: { p: Pos; onRemove: (ticker: string) => void }) {
                 onClick={() => onRemove(p.ticker)}
                 className="ml-auto inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-down"
               >
-                <Trash2 className="size-3.5" /> Rimuovi
+                <Trash2 className="size-3.5" /> Remove
               </button>
             </div>
           </div>
@@ -182,14 +182,14 @@ export function Holdings({ positions, onRemove }: { positions: Pos[]; onRemove: 
   return (
     <>
       <div className="grid grid-cols-3 gap-2.5 max-sm:grid-cols-2">
-        <Chip k="In guadagno" v={signedUsd(gainers.reduce((s, p) => s + p.gain, 0), 0)} tone="text-up" n={`${gainers.length} posizioni`} />
+        <Chip k="In profit" v={signedUsd(gainers.reduce((s, p) => s + p.gain, 0), 0)} tone="text-up" n={`${gainers.length} positions`} />
         <Chip
-          k="In perdita"
+          k="At a loss"
           v={signedUsd(losers.reduce((s, p) => s + p.gain, 0), 0)}
           tone={losers.length ? "text-down" : ""}
-          n={`${losers.length} posizioni`}
+          n={`${losers.length} positions`}
         />
-        <Chip k="Realizzato quest'anno" v="$0" n="nessuna vendita registrata" className="max-sm:col-span-2" />
+        <Chip k="Realized this year" v="$0" n="no sales recorded" className="max-sm:col-span-2" />
       </div>
       <div className="rounded-[22px] border border-border bg-card px-3.5 py-1.5">
         {sorted.map((p) => (

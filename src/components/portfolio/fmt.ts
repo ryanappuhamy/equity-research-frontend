@@ -1,7 +1,6 @@
-// Formatters for the Portfolio page: dollars in en-US style, percentages and
-// dates in Italian (the page copy is Italian).
+// Formatters shared by the Portfolio, Research and Simulator pages (en-US).
 
-const MONTHS = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function usd(v: number, digits = 2): string {
   const abs = Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -15,17 +14,18 @@ export function signedUsd(v: number, digits = 2): string {
 
 // v is a ratio (0.12 = 12%).
 export function pct(v: number, digits = 1, signed = true): string {
-  const s = (v * 100).toLocaleString("it-IT", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const s = (v * 100).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
   return `${signed && v > 0 ? "+" : ""}${s}%`;
 }
 
 export function num(v: number, digits = 1): string {
-  return v.toLocaleString("it-IT", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return v.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
+// "2026-10-02" -> "Oct 2, 2026"; "2026-10" -> "Oct 2026".
 export function fmtDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-");
-  return d ? `${Number(d)} ${MONTHS[Number(m) - 1]} ${y}` : `${MONTHS[Number(m) - 1]} ${y}`;
+  return d ? `${MONTHS[Number(m) - 1]} ${Number(d)}, ${y}` : `${MONTHS[Number(m) - 1]} ${y}`;
 }
 
 export function monthShort(iso: string): string {

@@ -22,11 +22,11 @@ const INDEXES = [
 
 // Capital-gains rate applied to the final gain (same defaults as the Portfolio tax card).
 const TAX = [
-  { k: "CH", label: "🇨🇭 Svizzera", rate: 0 },
-  { k: "IT", label: "🇮🇹 Italia", rate: 0.26 },
+  { k: "CH", label: "🇨🇭 Switzerland", rate: 0 },
+  { k: "IT", label: "🇮🇹 Italy", rate: 0.26 },
   { k: "US", label: "🇺🇸 USA", rate: 0.15 },
-  { k: "DE", label: "🇩🇪 Germania", rate: 0.26375 },
-  { k: "UK", label: "🇬🇧 Regno Unito", rate: 0.24 },
+  { k: "DE", label: "🇩🇪 Germany", rate: 0.26375 },
+  { k: "UK", label: "🇬🇧 United Kingdom", rate: 0.24 },
 ];
 
 function addMonths(ym: string, k: number) {
@@ -181,14 +181,14 @@ export default function SimulatorPage() {
 
   return (
     <Shell>
-      <Topbar title="Simulatore PAC" subtitle="Quanto cresce un piano di accumulo: sui dati storici reali o in proiezione." />
+      <Topbar title="Investment plan simulator" subtitle="How a monthly investment plan grows: on real historical data or as a projection." />
 
       <div className="flex flex-col gap-6 px-6 pb-6 pt-4">
         <div className="animate-rise flex w-fit gap-0.5 rounded-full border border-border bg-card p-[3px]">
           {(
             [
-              ["hist", "Sui dati storici"],
-              ["proj", "Proiezione futura"],
+              ["hist", "Historical"],
+              ["proj", "Projection"],
             ] as const
           ).map(([m, label]) => (
             <button
@@ -208,7 +208,7 @@ export default function SimulatorPage() {
         <div className="grid grid-cols-[300px_minmax(0,1fr)] items-start gap-[18px] max-[820px]:grid-cols-1">
           <div className="animate-rise flex flex-col gap-[18px] rounded-[22px] border border-border bg-card p-[18px]" style={{ "--i": 1 } as React.CSSProperties}>
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] text-muted-foreground">Strumento</span>
+              <span className="text-[13px] text-muted-foreground">Invest in</span>
               <div className="flex flex-wrap gap-1.5">
                 {instruments.map((i) => (
                   <button key={i.t} type="button" onClick={() => setInst(i.t)} className={pill(i.t === inst)}>
@@ -217,12 +217,12 @@ export default function SimulatorPage() {
                 ))}
               </div>
             </div>
-            <Slider id="amt" label="Versamento mensile" value={amount} display={usd(amount, 0)} min={50} max={3000} step={50} onChange={setAmount} />
-            <Slider id="yrs" label="Durata" value={yrs} display={`${yrs} ${yrs === 1 ? "anno" : "anni"}`} min={1} max={maxYears} step={1} onChange={setYears} />
+            <Slider id="amt" label="Monthly contribution" value={amount} display={usd(amount, 0)} min={50} max={3000} step={50} onChange={setAmount} />
+            <Slider id="yrs" label="Duration" value={yrs} display={`${yrs} ${yrs === 1 ? "year" : "years"}`} min={1} max={maxYears} step={1} onChange={setYears} />
             {mode === "proj" && (
               <Slider
                 id="ret"
-                label="Rendimento annuo atteso"
+                label="Expected annual return"
                 value={ret}
                 display={pct(ret / 100, 1, false)}
                 min={0}
@@ -232,17 +232,17 @@ export default function SimulatorPage() {
                 hint={
                   result && (
                     <>
-                      Rendimento storico di {name}: {pct(result.histCagr, 1, false)} annuo dal {points[0]?.month.slice(0, 4)}.
-                      {result.histCagr > 0.15 && " Ripetere un rendimento così per anni è improbabile."}
+                      {name} returned {pct(result.histCagr, 1, false)} a year since {points[0]?.month.slice(0, 4)}.
+                      {result.histCagr > 0.15 && " Repeating a return like that for years is unlikely."}
                     </>
                   )
                 }
               />
             )}
-            <Slider id="fee" label="Commissione per versamento" value={fee} display={usd(fee, fee % 1 ? 2 : 0)} min={0} max={10} step={0.5} onChange={setFee} />
-            {mode === "proj" && <Toggle checked={inflation} onChange={setInflation} label="Valori al netto dell'inflazione (2%)" />}
+            <Slider id="fee" label="Fee per contribution" value={fee} display={usd(fee, fee % 1 ? 2 : 0)} min={0} max={10} step={0.5} onChange={setFee} />
+            {mode === "proj" && <Toggle checked={inflation} onChange={setInflation} label="Adjust for inflation (2%)" />}
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] text-muted-foreground">Tasse sul guadagno</span>
+              <span className="text-[13px] text-muted-foreground">Tax on the gain</span>
               <div className="flex flex-wrap gap-1.5">
                 {TAX.map((t) => (
                   <button key={t.k} type="button" onClick={() => setCountry(t.k)} className={pill(t.k === country)}>
@@ -261,14 +261,14 @@ export default function SimulatorPage() {
                 <div className="grid grid-cols-3 gap-2.5 rounded-[22px] border border-border bg-card p-[18px] max-sm:grid-cols-2">
                   {(result.kind === "hist"
                     ? [
-                        ["Valore finale", result.final, false],
-                        ["Versato", result.invested, false],
-                        ["Guadagno", result.final - result.invested, true],
+                        ["Final value", result.final, false],
+                        ["Invested", result.invested, false],
+                        ["Gain", result.final - result.invested, true],
                       ]
                     : [
-                        ["Scenario centrale", result.p50[result.p50.length - 1], false],
-                        ["Pessimistico (10%)", result.p10[result.p10.length - 1], false],
-                        ["Ottimistico (90%)", result.p90[result.p90.length - 1], false],
+                        ["Median scenario", result.p50[result.p50.length - 1], false],
+                        ["Pessimistic (10%)", result.p10[result.p10.length - 1], false],
+                        ["Optimistic (90%)", result.p90[result.p90.length - 1], false],
                       ]
                   ).map(([k, v, signed], i) => (
                     <div key={k as string} className={cn(i === 0 && "max-sm:col-span-2")}>
@@ -293,7 +293,7 @@ export default function SimulatorPage() {
                   ) : (
                     <LineChart
                       key={`${mode}-${inst}`}
-                      ariaLabel="Crescita del piano di accumulo"
+                      ariaLabel="Investment plan growth"
                       height={300}
                       labels={result.labels}
                       yFormat={kFmt}
@@ -305,9 +305,9 @@ export default function SimulatorPage() {
                     />
                   )}
                   <div className="mt-1 flex flex-wrap gap-3.5 text-[12.5px] text-muted-foreground">
-                    <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-primary align-middle" />{result.kind === "hist" ? "Valore del piano" : "Scenario centrale"}</span>
-                    {result.kind === "proj" && <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-primary/35 align-middle" />Fascia 10°–90° percentile</span>}
-                    <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-muted-foreground align-middle" />Totale versato</span>
+                    <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-primary align-middle" />{result.kind === "hist" ? "Plan value" : "Median scenario"}</span>
+                    {result.kind === "proj" && <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-primary/35 align-middle" />10th–90th percentile range</span>}
+                    <span><i className="mr-1.5 inline-block h-[3px] w-3.5 rounded bg-muted-foreground align-middle" />Total invested</span>
                   </div>
                 </div>
 
@@ -319,18 +319,18 @@ export default function SimulatorPage() {
                 >
                   {result.kind === "hist" ? (
                     <>
-                      Investendo {usd(amount, 0)} al mese in <b>{name}</b> da {fmtDate(result.labels[0])}, oggi avresti <b>{usd(result.final, 0)}</b> su {usd(result.invested, 0)} versati
-                      {taxRate > 0 && `, ${usd(result.final - Math.max(0, result.final - result.invested) * taxRate, 0)} dopo le tasse`}. Investendo tutto il capitale subito avresti{" "}
-                      <b>{usd(result.lump, 0)}</b>: {result.lump > result.final ? "più del PAC, perché il mercato è salito quasi sempre" : "meno del PAC, perché hai comprato anche sui ribassi"}.
-                      {result.months < yrs * 12 && ` Dati disponibili solo per ${Math.floor(result.months / 12)} anni.`}
+                      Investing {usd(amount, 0)} a month in <b>{name}</b> since {fmtDate(result.labels[0])}, you would have <b>{usd(result.final, 0)}</b> today from {usd(result.invested, 0)} invested
+                      {taxRate > 0 && `, ${usd(result.final - Math.max(0, result.final - result.invested) * taxRate, 0)} after tax`}. Investing the whole amount up front would have given you{" "}
+                      <b>{usd(result.lump, 0)}</b>: {result.lump > result.final ? "more than the monthly plan, because the market rose most of the time" : "less than the monthly plan, because you also bought the dips"}.
+                      {result.months < yrs * 12 && ` Data only available for ${Math.floor(result.months / 12)} years.`}
                     </>
                   ) : (
                     <>
-                      {usd(amount, 0)} al mese per {yrs} anni in <b>{name}</b>: versi {usd(amount * result.months, 0)} e nello scenario centrale arrivi a{" "}
+                      {usd(amount, 0)} a month for {yrs} years in <b>{name}</b>: you put in {usd(amount * result.months, 0)} and the median scenario ends at{" "}
                       <b>{usd(result.p50[result.p50.length - 1], 0)}</b>
-                      {inflation ? " in potere d'acquisto di oggi" : ""}
-                      {taxRate > 0 && `, circa ${usd(result.p50[result.p50.length - 1] - Math.max(0, result.p50[result.p50.length - 1] - amount * result.months) * taxRate, 0)} dopo le tasse`}
-                      . La fascia usa la volatilità storica di {name} ({pct(result.sigma * Math.sqrt(12), 0, false)} annua) e un rendimento atteso del {pct(ret / 100, 1, false)}.
+                      {inflation ? " in today's purchasing power" : ""}
+                      {taxRate > 0 && `, about ${usd(result.p50[result.p50.length - 1] - Math.max(0, result.p50[result.p50.length - 1] - amount * result.months) * taxRate, 0)} after tax`}
+                      . The range uses the historical volatility of {name} ({pct(result.sigma * Math.sqrt(12), 0, false)} a year) and an expected return of {pct(ret / 100, 1, false)}.
                     </>
                   )}
                 </p>

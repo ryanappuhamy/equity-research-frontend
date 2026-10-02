@@ -134,7 +134,7 @@ export default function ResearchReportPage() {
 
   return (
     <Shell>
-      <Topbar title="Research" subtitle="Analisi completa di un titolo: prezzo, fondamentali, insider e nota AI." />
+      <Topbar title="Research" subtitle="A full read on any stock: price, fundamentals, insider activity and an AI research note." />
 
       <div className="flex flex-col gap-7 px-6 pb-6 pt-4">
         <div className="animate-rise flex flex-col gap-3">
@@ -144,7 +144,7 @@ export default function ResearchReportPage() {
               name="ticker"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Cerca un titolo, per esempio AAPL o NVDA"
+              placeholder="Search a ticker, for example AAPL or NVDA"
               autoComplete="off"
               spellCheck={false}
               className="h-14 w-full rounded-full border border-border bg-card pl-14 pr-36 text-[16px] text-foreground outline-none transition-colors placeholder:text-faint focus:border-primary"
@@ -155,7 +155,7 @@ export default function ResearchReportPage() {
               className="absolute right-2 top-1/2 inline-flex h-10 -translate-y-1/2 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-bold text-background transition-transform active:scale-[.97] disabled:opacity-60"
             >
               {isFetching ? <Loader2 className="size-4 animate-spin" /> : null}
-              {isFetching ? "Analizzo…" : "Analizza"}
+              {isFetching ? "Analyzing…" : "Analyze"}
             </button>
           </form>
           <div className="flex flex-wrap items-center gap-2">
@@ -177,14 +177,14 @@ export default function ResearchReportPage() {
         </div>
 
         {isError && (
-          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Impossibile caricare il report"}</p>
+          <p className="text-sm text-destructive">{error instanceof Error ? error.message : "Could not load the report"}</p>
         )}
 
         {!ticker && (
           <div className="animate-rise flex flex-col gap-2 rounded-[22px] border border-border bg-card p-6" style={{ "--i": 1 } as React.CSSProperties}>
-            <h2 className="text-xl font-semibold tracking-tight">Scegli un titolo da analizzare</h2>
+            <h2 className="text-xl font-semibold tracking-tight">Pick a stock to analyze</h2>
             <p className="max-w-[60ch] text-[15px] text-muted-foreground">
-              Il report mette insieme prezzo e andamento, valutazione, crescita, redditività, solidità finanziaria, acquisti e vendite degli insider e una nota scritta dall&apos;AI. La prima analisi di un titolo può richiedere fino a un minuto.
+              The report brings together price action, valuation, growth, profitability, financial health, insider buying and selling, and a note written by AI. The first analysis of a ticker can take up to a minute.
             </p>
           </div>
         )}
@@ -209,7 +209,7 @@ export default function ResearchReportPage() {
                 )}
                 {ret1y != null && !Number.isNaN(ret1y) && (
                   <span className={cn("mt-1 text-[15px] font-semibold", toneClass(ret1y))}>
-                    {ret1y >= 0 ? "▲" : "▼"} {pct(ret1y)} <span className="font-medium text-muted-foreground">nell&apos;ultimo anno</span>
+                    {ret1y >= 0 ? "▲" : "▼"} {pct(ret1y)} <span className="font-medium text-muted-foreground">over the past year</span>
                   </span>
                 )}
                 {rangePos != null && (
@@ -218,32 +218,32 @@ export default function ResearchReportPage() {
                       <i className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-background bg-foreground transition-[left] duration-700" style={{ left: `${rangePos * 100}%` }} />
                     </div>
                     <div className="mt-1.5 flex justify-between font-mono text-[11px] text-faint">
-                      <span>min 52 sett. {usd(lo52!, 0)}</span>
-                      <span>max {usd(hi52!, 0)}</span>
+                      <span>52-week low {usd(lo52!, 0)}</span>
+                      <span>high {usd(hi52!, 0)}</span>
                     </div>
                   </div>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={handleDownloadPdf} className={pill}>
-                  <Download className="size-4" /> Scarica PDF
+                  <Download className="size-4" /> Download PDF
                 </button>
                 <button
                   type="button"
                   onClick={handleRetryLoad}
                   disabled={clearReportCache.isPending || isFetching}
-                  title="Svuota la cache e rigenera il report da zero"
+                  title="Clear the cache and rebuild the report from scratch"
                   className={pill}
                 >
                   <RefreshCw className={cn("size-4", (clearReportCache.isPending || isFetching) && "animate-spin")} />
-                  {clearReportCache.isPending || isFetching ? "Rigenero…" : "Rigenera"}
+                  {clearReportCache.isPending || isFetching ? "Regenerating…" : "Regenerate"}
                 </button>
               </div>
             </div>
 
             {metricUnavailable && (
               <p className="-mt-3 text-[13px] text-muted-foreground">
-                Alcuni dati non sono disponibili: prova &ldquo;Rigenera&rdquo; per rifare la ricerca.
+                Some data is unavailable: try &ldquo;Regenerate&rdquo; to run the research again.
               </p>
             )}
 
@@ -252,21 +252,21 @@ export default function ResearchReportPage() {
             </div>
 
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 2 } as React.CSSProperties}>
-              <SectionLabel>Fondamentali</SectionLabel>
+              <SectionLabel>Fundamentals</SectionLabel>
               <ReportMetricCards fundamentals={fundamentals} />
             </section>
 
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 3 } as React.CSSProperties}>
-              <SectionLabel>Nota di ricerca</SectionLabel>
+              <SectionLabel>Research note</SectionLabel>
               <AICard model={data.report_model ?? undefined}>
                 <BriefMarkdown content={data.report} />
               </AICard>
             </section>
 
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 4 } as React.CSSProperties}>
-              <SectionLabel>Insider: ultimi 90 giorni</SectionLabel>
+              <SectionLabel>Insider activity: last 90 days</SectionLabel>
               <DataCard source="SEC EDGAR">
-                <AvailabilityGuard available={insider?.available} note={insider?.note} emptyLabel="Dati insider non disponibili">
+                <AvailabilityGuard available={insider?.available} note={insider?.note} emptyLabel="Insider data unavailable">
                   <InsiderActivityTable activity={insider} />
                 </AvailabilityGuard>
               </DataCard>

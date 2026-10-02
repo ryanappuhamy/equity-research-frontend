@@ -23,38 +23,38 @@ function formatGeneratedAt(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("it-IT", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "long",
     timeStyle: "short",
   }).format(date);
 }
 
 function formatCacheBadge(cachedAt?: string | null): { fresh: boolean; label: string } {
-  if (!cachedAt) return { fresh: false, label: "Dalla cache" };
+  if (!cachedAt) return { fresh: false, label: "Cached" };
 
   const cached = new Date(cachedAt);
-  if (Number.isNaN(cached.getTime())) return { fresh: false, label: "Dalla cache" };
+  if (Number.isNaN(cached.getTime())) return { fresh: false, label: "Cached" };
 
   const now = new Date();
   const diffMs = now.getTime() - cached.getTime();
-  if (diffMs < 0) return { fresh: true, label: "Aggiornato oggi" };
+  if (diffMs < 0) return { fresh: true, label: "Updated today" };
 
   if (cached.toDateString() === now.toDateString()) {
-    return { fresh: true, label: "Aggiornato oggi" };
+    return { fresh: true, label: "Updated today" };
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   if (hours < 24) {
     return {
       fresh: false,
-      label: hours === 1 ? "Di 1 ora fa" : `Di ${hours} ore fa`,
+      label: hours === 1 ? "1 hour old" : `${hours} hours old`,
     };
   }
 
   const days = Math.floor(hours / 24);
   return {
     fresh: false,
-    label: days === 1 ? "Di ieri" : `Di ${days} giorni fa`,
+    label: days === 1 ? "From yesterday" : `${days} days old`,
   };
 }
 
@@ -84,18 +84,18 @@ export default function WeeklyBriefPage() {
   async function handleGenerate() {
     try {
       await generateBrief.mutateAsync();
-      toast.success("Brief generato");
+      toast.success("Brief generated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Non è stato possibile generare il brief");
+      toast.error(err instanceof Error ? err.message : "Could not generate the brief");
     }
   }
 
   async function handleRegenerate() {
     try {
       await regenerateBrief.mutateAsync(undefined);
-      toast.success("Brief rigenerato");
+      toast.success("Brief regenerated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Non è stato possibile rigenerare il brief");
+      toast.error(err instanceof Error ? err.message : "Could not regenerate the brief");
     }
   }
 
@@ -116,14 +116,14 @@ export default function WeeklyBriefPage() {
               <FreshnessBadge cachedAt={data?.cached_at} />
             </span>
           ) : (
-            "Il riassunto settimanale del tuo portafoglio: notizie, macro e cosa tenere d'occhio."
+            "A weekly summary of your portfolio: news, macro and what to watch."
           )
         }
         actions={
           hasBrief ? (
             <button type="button" className={pill} onClick={handleRegenerate} disabled={isGenerating}>
               {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}
-              {isGenerating ? "Rigenero…" : "Rigenera"}
+              {isGenerating ? "Regenerating…" : "Regenerate"}
             </button>
           ) : null
         }
@@ -135,7 +135,7 @@ export default function WeeklyBriefPage() {
             ? error.message
             : mutationError instanceof Error
               ? mutationError.message
-              : "Impossibile caricare il brief"}
+              : "Could not load the weekly brief"}
         </p>
       )}
 
@@ -149,9 +149,9 @@ export default function WeeklyBriefPage() {
                 <Sparkles className="size-6" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold tracking-tight">Nessun brief per questa settimana</h2>
+                <h2 className="text-xl font-semibold tracking-tight">No brief for this week yet</h2>
                 <p className="mt-1 max-w-[56ch] text-[15px] text-muted-foreground">
-                  Genera un brief a partire dalle tue posizioni, dalle notizie recenti e dal contesto macro. Richiede circa un minuto.
+                  Generate a brief from your holdings, recent news and the macro backdrop. It takes about a minute.
                 </p>
               </div>
               <button
@@ -161,7 +161,7 @@ export default function WeeklyBriefPage() {
                 className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 font-semibold text-background transition-transform active:scale-[.98] disabled:opacity-60"
               >
                 {isGenerating && <Loader2 className="size-4 animate-spin" />}
-                {isGenerating ? "Genero…" : "Genera il brief"}
+                {isGenerating ? "Generating…" : "Generate brief"}
               </button>
             </div>
           )}
@@ -174,7 +174,7 @@ export default function WeeklyBriefPage() {
                 </div>
               </article>
               <p className="text-xs leading-relaxed text-faint">
-                Brief generato dall&apos;AI a partire dalle tue posizioni e da dati di mercato pubblici. Ha solo scopo informativo e non è una raccomandazione di acquisto o vendita.
+                This brief is AI-generated from your holdings and public market data. It is for information only and is not a recommendation to buy or sell any security.
               </p>
             </>
           )}

@@ -85,32 +85,32 @@ export function ReportMetricCards({ fundamentals }: { fundamentals?: Fundamental
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 
-        <FintechCard title="Valutazione">
+        <FintechCard title="Valuation">
           <MetricRow
-            label="P/E atteso"
+            label="Forward P/E"
             value={fmtMetric(fmtMultiple(fundamentals?.forward_pe))}
           />
           <MetricRow
-            label="P/E attuale"
+            label="Trailing P/E"
             value={fmtMetric(fmtMultiple(trailingPe))}
           />
           <MetricRow label="PEG Ratio" value={fmtMetric(fmtMultiple(fundamentals?.peg_ratio))} />
           <MetricRow label="EV/EBITDA" value={fmtMetric(fmtMultiple(fundamentals?.ev_ebitda))} />
         </FintechCard>
 
-        <FintechCard title="Crescita">
+        <FintechCard title="Growth">
           <MetricRow
-            label="Ricavi su anno"
+            label="Revenue YoY"
             value={fmtMetric(fmtPercent(fundamentals?.revenue_growth_yoy, { signed: true }))}
             valueClassName={signedColor(fundamentals?.revenue_growth_yoy)}
           />
           <MetricRow
-            label="Utile per azione su anno"
+            label="EPS YoY"
             value={fmtMetric(fmtPercent(fundamentals?.eps_growth_yoy, { signed: true }))}
             valueClassName={signedColor(fundamentals?.eps_growth_yoy)}
           />
           <MetricRow
-            label="Ricavi attesi"
+            label="Revenue forward"
             value={fmtMetric(fmtPercent(fundamentals?.revenue_forward, { signed: true }))}
             valueClassName={signedColor(fundamentals?.revenue_forward)}
           />
@@ -118,19 +118,19 @@ export function ReportMetricCards({ fundamentals }: { fundamentals?: Fundamental
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <FintechCard title="Redditività">
+        <FintechCard title="Profitability">
         <MetricRow
-          label="Margine lordo"
+          label="Gross margin"
           value={fmtMetric(fmtPercent(fundamentals?.gross_margin))}
         />
         <MetricRow
-          label="Margine operativo"
+          label="Operating margin"
           value={fmtMetric(fmtPercent(fundamentals?.operating_margin))}
         />
-        <MetricRow label="Margine netto" value={fmtMetric(fmtPercent(fundamentals?.net_margin))} />
+        <MetricRow label="Net margin" value={fmtMetric(fmtPercent(fundamentals?.net_margin))} />
       </FintechCard>
 
-      <FintechCard title="Solidità finanziaria">
+      <FintechCard title="Financial health">
         <MetricRow
           label="Debt/Equity"
           value={fmtMetric(fmtNumber(fundamentals?.debt_to_equity, 2))}
@@ -145,15 +145,15 @@ export function ReportMetricCards({ fundamentals }: { fundamentals?: Fundamental
         />
       </FintechCard>
 
-      <FintechCard title="Conti (ultimi 12 mesi)">
+      <FintechCard title="Financials (TTM)">
         <FinancialRow
-          label="Ricavi"
+          label="Revenue"
           amount={fundamentals?.revenue_ttm}
           yoy={fundamentals?.revenue_yoy ?? fundamentals?.revenue_growth_yoy}
         />
         <FinancialRow label="EBITDA" amount={fundamentals?.ebitda_ttm} yoy={fundamentals?.ebitda_yoy} />
         <FinancialRow
-          label="Utile netto"
+          label="Net income"
           amount={fundamentals?.net_income_ttm}
           yoy={fundamentals?.net_income_yoy}
         />

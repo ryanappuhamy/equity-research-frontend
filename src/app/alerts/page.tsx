@@ -27,23 +27,23 @@ type AlertPreset = {
 };
 
 const ALERT_PRESETS: AlertPreset[] = [
-  { value: "price:above", label: "Prezzo sopra", metric: "price", operator: "above" },
-  { value: "price:below", label: "Prezzo sotto", metric: "price", operator: "below" },
-  { value: "pe_ttm:above", label: "P/E sopra", metric: "pe_ttm", operator: "above" },
-  { value: "pe_ttm:below", label: "P/E sotto", metric: "pe_ttm", operator: "below" },
+  { value: "price:above", label: "Price above", metric: "price", operator: "above" },
+  { value: "price:below", label: "Price below", metric: "price", operator: "below" },
+  { value: "pe_ttm:above", label: "P/E above", metric: "pe_ttm", operator: "above" },
+  { value: "pe_ttm:below", label: "P/E below", metric: "pe_ttm", operator: "below" },
   {
     value: "insider_filings:above",
-    label: "Operazioni insider oltre",
+    label: "Insider filings above",
     metric: "insider_filings",
     operator: "above",
   },
 ];
 
 const METRIC_LABELS: Record<AlertMetric, string> = {
-  price: "Prezzo",
+  price: "Price",
   pe_ttm: "P/E",
-  revenue_growth_yoy: "Crescita dei ricavi",
-  insider_filings: "Operazioni insider",
+  revenue_growth_yoy: "Revenue growth",
+  insider_filings: "Insider filings",
 };
 
 function formatCondition(alert: Alert): string {
@@ -58,7 +58,7 @@ function formatCondition(alert: Alert): string {
           ? fmtPercent(alert.threshold)
           : fmtNumber(alert.threshold);
 
-  return `${label} ${alert.operator === "above" ? "sopra" : "sotto"} ${threshold}`;
+  return `${label} ${alert.operator === "above" ? "above" : "below"} ${threshold}`;
 }
 
 function AlertsSkeleton() {
@@ -96,9 +96,9 @@ export default function AlertsPage() {
   async function handleDelete(id: number) {
     try {
       await deleteAlert.mutateAsync(id);
-      toast.success("Alert eliminato");
+      toast.success("Alert deleted");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Non è stato possibile eliminare l'alert");
+      toast.error(err instanceof Error ? err.message : "Could not delete the alert");
     }
   }
 
@@ -107,11 +107,11 @@ export default function AlertsPage() {
     const parsedThreshold = Number(threshold);
 
     if (!nextTicker || !threshold) {
-      toast.error("Inserisci titolo e soglia");
+      toast.error("Enter a ticker and a threshold");
       return;
     }
     if (!Number.isFinite(parsedThreshold)) {
-      toast.error("Soglia non valida");
+      toast.error("The threshold must be a number");
       return;
     }
 
@@ -124,11 +124,11 @@ export default function AlertsPage() {
         operator: selected.operator,
         threshold: parsedThreshold,
       });
-      toast.success(`Alert creato per ${nextTicker}`);
+      toast.success(`Alert created for ${nextTicker}`);
       setTicker("");
       setThreshold("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Non è stato possibile creare l'alert");
+      toast.error(err instanceof Error ? err.message : "Could not create the alert");
     }
   }
 
@@ -141,16 +141,16 @@ export default function AlertsPage() {
   return (
     <Shell>
       <Topbar
-        title="Alert"
+        title="Alerts"
         subtitle={
           alerts.length
-            ? `${alerts.length} attivi${triggeredCount ? ` · ${triggeredCount} scattati` : ""}`
-            : "Ricevi un segnale quando prezzo o P/E di un titolo superano una soglia."
+            ? `${alerts.length} active${triggeredCount ? ` · ${triggeredCount} triggered` : ""}`
+            : "Get flagged when a stock's price or P/E crosses a threshold."
         }
       />
 
       {isError && (
-        <p className="px-6 pt-2 text-sm text-destructive">{error instanceof Error ? error.message : "Impossibile caricare gli alert"}</p>
+        <p className="px-6 pt-2 text-sm text-destructive">{error instanceof Error ? error.message : "Could not load alerts"}</p>
       )}
 
       {isLoading ? (
@@ -158,14 +158,14 @@ export default function AlertsPage() {
       ) : (
         <div className="flex flex-col gap-7 px-6 pb-6 pt-4">
           <div className="animate-rise rounded-[22px] border border-border bg-card px-3.5 py-1.5">
-            <AvailabilityGuard available={alertsQuery.data?.available} note={alertsQuery.data?.note} emptyLabel="Alert non disponibili">
+            <AvailabilityGuard available={alertsQuery.data?.available} note={alertsQuery.data?.note} emptyLabel="Alerts unavailable">
               {alerts.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-10 text-center">
                   <span className="flex size-12 items-center justify-center rounded-2xl bg-secondary">
                     <Bell className="size-5" />
                   </span>
-                  <p className="font-semibold">Nessun alert</p>
-                  <p className="text-sm text-muted-foreground">Creane uno qui sotto.</p>
+                  <p className="font-semibold">No alerts yet</p>
+                  <p className="text-sm text-muted-foreground">Create one below.</p>
                 </div>
               ) : (
                 alerts.map((alert) => {
@@ -181,7 +181,7 @@ export default function AlertsPage() {
                           {alert.ticker} · {formatCondition(alert)}
                         </div>
                         <div className="truncate text-[13px] text-muted-foreground">
-                          {hit?.explanation ?? (checkQuery.isPending ? "Verifica in corso…" : "Condizione non raggiunta")}
+                          {hit?.explanation ?? (checkQuery.isPending ? "Checking…" : "Condition not met")}
                         </div>
                       </div>
                       <span
@@ -190,11 +190,11 @@ export default function AlertsPage() {
                           isTriggered ? "bg-warn/15 text-warn" : "bg-up/15 text-up",
                         )}
                       >
-                        {isTriggered ? "Scattato" : "OK"}
+                        {isTriggered ? "Triggered" : "OK"}
                       </span>
                       <button
                         type="button"
-                        aria-label={`Elimina l'alert su ${alert.ticker}`}
+                        aria-label={`Delete the ${alert.ticker} alert`}
                         disabled={deleteAlert.isPending}
                         onClick={() => handleDelete(alert.id)}
                         className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-down"
@@ -209,7 +209,7 @@ export default function AlertsPage() {
           </div>
 
           <section className="animate-rise flex flex-col gap-3" style={{ "--i": 1 } as React.CSSProperties}>
-            <SectionLabel>Nuovo alert</SectionLabel>
+            <SectionLabel>New alert</SectionLabel>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -235,15 +235,15 @@ export default function AlertsPage() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <input placeholder="Titolo (es. AAPL)" value={ticker} onChange={(e) => setTicker(e.target.value)} className={cn(field, "w-44")} autoComplete="off" />
-                <input placeholder="Soglia" value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="decimal" className={cn(field, "w-32")} />
+                <input placeholder="Ticker (e.g. AAPL)" value={ticker} onChange={(e) => setTicker(e.target.value)} className={cn(field, "w-44")} autoComplete="off" />
+                <input placeholder="Threshold" value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="decimal" className={cn(field, "w-32")} />
                 <button
                   type="submit"
                   disabled={createAlert.isPending}
                   className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 font-semibold text-background transition-transform active:scale-[.98] disabled:opacity-60"
                 >
                   {createAlert.isPending && <Loader2 className="size-4 animate-spin" />}
-                  Crea alert
+                  Create alert
                 </button>
               </div>
             </form>

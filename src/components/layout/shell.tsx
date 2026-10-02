@@ -19,10 +19,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <span>{OWNER_NAME}</span>
         {SITE_URL && (
           <a href={SITE_URL} target="_blank" rel="noopener" className="transition-colors hover:text-muted-foreground">
-            sito ↗
+            website ↗
           </a>
         )}
-        <span className="ml-auto">Server gratuito: il primo caricamento può richiedere ~50s</span>
+        <span className="ml-auto">Free-tier server: the first load can take ~50s</span>
       </footer>
     </div>
   );

@@ -110,40 +110,40 @@ export function HealthCards({
     cards.push(
       <HealthCard
         key="ret"
-        title="Rendimento vs mercato"
-        badge={stats.retP > stats.retB ? ["good", "Batti il mercato"] : ["bad", "Sotto il mercato"]}
+        title="Return vs market"
+        badge={stats.retP > stats.retB ? ["good", "Beating the market"] : ["bad", "Behind the market"]}
         big={<>{pct(stats.retP, 0)} <Small>vs {benchName} {pct(stats.retB, 0)}</Small></>}
-        say={<>In un anno il portafoglio ha fatto <b>{pct(stats.retP - stats.retB, 0)}</b> rispetto all&apos;indice. Rendimento per unità di rischio: Sharpe <b>{num(stats.sharpe, 2)}</b> contro {num(stats.sharpeB, 2)}.</>}
-        mini={[["Sharpe", num(stats.sharpe, 2)], ["Alfa", pct(alpha, 0)], ["Tasso privo di rischio", "4%"]]}
+        say={<>Over the past year the portfolio {stats.retP >= stats.retB ? "beat" : "trailed"} the index by <b>{num(Math.abs(stats.retP - stats.retB) * 100, 0)} points</b>. Return per unit of risk: Sharpe <b>{num(stats.sharpe, 2)}</b> vs {num(stats.sharpeB, 2)}.</>}
+        mini={[["Sharpe", num(stats.sharpe, 2)], ["Alpha", pct(alpha, 0)], ["Risk-free rate", "4%"]]}
       />,
       <HealthCard
         key="risk"
-        title="Rischio"
-        badge={beta > 1.5 ? ["warn", "Alto"] : beta > 1.1 ? ["neutral", "Sopra la media"] : ["good", "In linea"]}
+        title="Risk"
+        badge={beta > 1.5 ? ["warn", "High"] : beta > 1.1 ? ["neutral", "Above average"] : ["good", "In line"]}
         big={`Beta ${num(beta, 1)}`}
-        say={<>Quando il mercato si muove dell&apos;1%, il tuo portafoglio si muove in media del <b>{num(beta, 1)}%</b>. Oscilla <b>{num(stats.volP / stats.volB, 1)} volte</b> più di {benchName}. Nel momento peggiore dell&apos;anno eri sotto del <b>{pct(-stats.ddP, 0, false)}</b> rispetto al massimo.</>}
-        mini={[["Calo massimo", pct(stats.ddP, 0)], [`Calo max ${benchName}`, pct(stats.ddB, 0)], ["Volatilità", pct(stats.volP, 0, false)]]}
+        say={<>When the market moves 1%, your portfolio moves <b>{num(beta, 1)}%</b> on average. It swings <b>{num(stats.volP / stats.volB, 1)}x</b> as much as the {benchName}. At its worst point this year it was <b>{pct(-stats.ddP, 0, false)}</b> below its peak.</>}
+        mini={[["Max drawdown", pct(stats.ddP, 0)], [`${benchName} drawdown`, pct(stats.ddB, 0)], ["Volatility", pct(stats.volP, 0, false)]]}
       />,
     );
   }
   if (top) cards.push(
     <HealthCard
       key="div"
-      title="Diversificazione"
-      badge={top.weight > 0.4 ? ["bad", "Concentrato"] : ["good", "Bilanciato"]}
+      title="Diversification"
+      badge={top.weight > 0.4 ? ["bad", "Concentrated"] : ["good", "Balanced"]}
       big={<>{pct(top.weight, 0, false)} <Small>in {top.ticker}</Small></>}
-      say={<>Hai {positions.length} titoli ma il peso è distribuito come se ne avessi <b>{num(effN, 1)}</b>.{avgCorr != null && <> I tuoi titoli si muovono insieme (correlazione media <b>{num(avgCorr, 2)}</b>)</>}{tech > 0 && <>{avgCorr != null ? " e la" : " La"} tecnologia vale il <b>{pct(tech, 0, false)}</b> del totale, senza contare quella dentro gli ETF</>}.</>}
-      mini={[["Posizioni effettive", num(effN, 1)], ["Peso tech", pct(tech, 0, false)], ["Prima posizione", pct(top.weight, 0, false)]]}
+      say={<>You hold {positions.length} positions, but the weights behave like <b>{num(effN, 1)}</b>.{avgCorr != null && <> Your stocks move together (average correlation <b>{num(avgCorr, 2)}</b>)</>}{tech > 0 && <>{avgCorr != null ? " and" : ""} tech is <b>{pct(tech, 0, false)}</b> of the total, not counting the tech inside ETFs</>}.</>}
+      mini={[["Effective positions", num(effN, 1)], ["Tech weight", pct(tech, 0, false)], ["Largest position", pct(top.weight, 0, false)]]}
     />,
   );
   if (pe) cards.push(
     <HealthCard
       key="val"
-      title="Valutazione"
-      badge={indexPe && pe < indexPe ? ["good", "Più economico dell'indice"] : ["warn", "Più caro dell'indice"]}
+      title="Valuation"
+      badge={indexPe && pe < indexPe ? ["good", "Cheaper than the index"] : ["warn", "Pricier than the index"]}
       big={<>P/E {num(pe, 1)} {indexPe && <Small>vs S&amp;P {num(indexPe, 1)}</Small>}</>}
-      say={<>{peStocks && fpe ? <>Sulle azioni paghi <b>{Math.round(peStocks)} volte</b> gli utili attuali ma <b>{Math.round(fpe)} volte</b> quelli attesi{fpe < peStocks * 0.8 ? ": il mercato si aspetta una forte crescita degli utili" : ""}. </> : null}{upside != null && <>Secondo gli analisti i tuoi titoli hanno un potenziale medio del <b>{pct(upside, 0)}</b>.</>}</>}
-      mini={[["P/E atteso (azioni)", fpe ? num(fpe, 1) : "—"], ["Potenziale analisti", upside != null ? pct(upside, 0) : "—"], ["Dividendi", pct(divY, 2, false)]]}
+      say={<>{peStocks && fpe ? <>On your stocks you pay <b>{Math.round(peStocks)}x</b> current earnings but only <b>{Math.round(fpe)}x</b> expected earnings{fpe < peStocks * 0.8 ? ": the market expects strong earnings growth" : ""}. </> : null}{upside != null && <>Analysts see an average upside of <b>{pct(upside, 0)}</b> on your stocks.</>}</>}
+      mini={[["Forward P/E (stocks)", fpe ? num(fpe, 1) : "—"], ["Analyst upside", upside != null ? pct(upside, 0) : "—"], ["Dividend yield", pct(divY, 2, false)]]}
     />,
   );
   return <div className="grid grid-cols-2 gap-3 max-[680px]:grid-cols-1">{cards}</div>;
@@ -177,7 +177,7 @@ export function Contribution({ positions }: { positions: Pos[] }) {
         </div>
       ))}
       <p className="mt-1 text-sm text-muted-foreground">
-        {sorted[0].ticker} da sola genera il <b className="font-semibold text-foreground">{pct(sorted[0].gain / g, 0, false)}</b> del tuo guadagno totale.
+        {sorted[0].ticker} alone accounts for <b className="font-semibold text-foreground">{pct(sorted[0].gain / g, 0, false)}</b> of your total gain.
       </p>
     </div>
   );
@@ -197,26 +197,26 @@ type Country = {
 
 const COUNTRIES: Record<string, Country> = {
   CH: {
-    flag: "🇨🇭", name: "Svizzera", rate: () => 0, allowance: 0, offset: false,
-    note: ({ dividends }) => <>Per i privati <b>i guadagni da vendita sono esenti</b>. Sono tassati invece i <b>dividendi</b>, come reddito: sui tuoi titoli USA circa <b>{usd(dividends, 0)} l&apos;anno</b>, con il 15% ({usd(dividends * 0.15, 0)}) trattenuto alla fonte e recuperabile in dichiarazione. Il portafoglio conta anche per l&apos;<b>imposta sul patrimonio</b>. Chi fa trading molto frequente o a leva può essere considerato commerciante professionale, e allora i guadagni diventano reddito.</>,
+    flag: "🇨🇭", name: "Switzerland", rate: () => 0, allowance: 0, offset: false,
+    note: ({ dividends }) => <>For private investors <b>capital gains are tax-free</b>. <b>Dividends</b> are taxed as income instead: about <b>{usd(dividends, 0)} a year</b> on your US stocks, with 15% ({usd(dividends * 0.15, 0)}) withheld at source and reclaimable in your tax return. The portfolio also counts toward the <b>wealth tax</b>. Very frequent or leveraged trading can get you classified as a professional trader, and then gains become taxable income.</>,
   },
   IT: {
-    flag: "🇮🇹", name: "Italia", rate: () => 0.26, allowance: 0, offset: true,
-    note: () => <>Aliquota del <b>26%</b> sulle plusvalenze (12,5% sui titoli di Stato). Le minusvalenze si possono compensare con le plusvalenze dei <b>quattro anni successivi</b>: vendere un titolo in perdita prima di realizzare un guadagno riduce l&apos;imposta.</>,
+    flag: "🇮🇹", name: "Italy", rate: () => 0.26, allowance: 0, offset: true,
+    note: () => <><b>26%</b> on capital gains (12.5% on government bonds). Losses can offset gains over the <b>following four years</b>: selling a losing position before realizing a gain lowers the tax.</>,
   },
   US: {
     flag: "🇺🇸", name: "USA", rate: (long) => (long ? 0.15 : 0.24), allowance: 0, offset: true, holdingToggle: true,
     note: ({ long }) => long
-      ? <>Titoli tenuti <b>più di un anno</b>: aliquota agevolata 0/15/20% in base al reddito (qui 15%). Sopra certe soglie si aggiunge il 3,8% di Net Investment Income Tax.</>
-      : <>Titoli tenuti <b>meno di un anno</b>: il guadagno è tassato come reddito ordinario (qui 24%). Aspettare oltre i 12 mesi spesso dimezza l&apos;imposta.</>,
+      ? <>Held <b>more than a year</b>: long-term rate of 0/15/20% depending on income (15% here). Above certain thresholds the 3.8% Net Investment Income Tax applies too.</>
+      : <>Held <b>less than a year</b>: the gain is taxed as ordinary income (24% here). Waiting past 12 months often halves the tax.</>,
   },
   DE: {
-    flag: "🇩🇪", name: "Germania", rate: () => 0.26375, allowance: 1170, offset: true,
-    note: () => <>Imposta forfettaria del 25% più contributo di solidarietà: <b>26,375%</b> (più l&apos;eventuale imposta di culto). I primi <b>1.000 €</b> di redditi da capitale all&apos;anno sono esenti.</>,
+    flag: "🇩🇪", name: "Germany", rate: () => 0.26375, allowance: 1170, offset: true,
+    note: () => <>Flat 25% tax plus solidarity surcharge: <b>26.375%</b> (plus church tax, if any). The first <b>€1,000</b> of investment income each year is tax-free.</>,
   },
   UK: {
-    flag: "🇬🇧", name: "Regno Unito", rate: () => 0.24, allowance: 4000, offset: true,
-    note: () => <>Capital gains tax al <b>24%</b> per chi è nella fascia di reddito alta (18% nella fascia base). I primi <b>£3.000</b> di guadagni all&apos;anno sono esenti. Negli ISA i guadagni non sono tassati.</>,
+    flag: "🇬🇧", name: "United Kingdom", rate: () => 0.24, allowance: 4000, offset: true,
+    note: () => <>Capital gains tax of <b>24%</b> for higher-rate taxpayers (18% at the basic rate). The first <b>£3,000</b> of gains each year is tax-free. Gains inside an ISA are not taxed.</>,
   },
 };
 
@@ -248,17 +248,17 @@ export function TaxCard({ positions }: { positions: Pos[] }) {
           </button>
         ))}
       </div>
-      {c.holdingToggle && <Toggle checked={long} onChange={setLong} label="Titoli tenuti più di un anno" />}
+      {c.holdingToggle && <Toggle checked={long} onChange={setLong} label="Held for more than a year" />}
       <div className="grid grid-cols-3 gap-3 max-[560px]:grid-cols-1">
-        <TaxStat k="Guadagno lordo" v={gains - losses} fmt={(v) => signedUsd(v, 0)} className="text-up" />
-        <TaxStat k="Imposta stimata" v={-tax} fmt={(v) => (tax ? usd(v, 0) : "$0")} />
-        <TaxStat k="Ti resterebbe" v={total - tax} fmt={(v) => usd(v, 0)} />
+        <TaxStat k="Gross gain" v={gains - losses} fmt={(v) => signedUsd(v, 0)} className="text-up" />
+        <TaxStat k="Estimated tax" v={-tax} fmt={(v) => (tax ? usd(v, 0) : "$0")} />
+        <TaxStat k="You would keep" v={total - tax} fmt={(v) => usd(v, 0)} />
       </div>
       <p className="max-w-[70ch] text-[13.5px] leading-relaxed text-muted-foreground [&_b]:font-semibold [&_b]:text-foreground">
         {c.note({ long, dividends })}
       </p>
       <p className="text-xs text-faint">
-        Stima indicativa con aliquote standard, non è consulenza fiscale. Le soglie in valuta locale sono convertite al cambio approssimativo.
+        Rough estimate using standard rates, not tax advice. Allowances in local currency are converted at an approximate exchange rate.
       </p>
     </div>
   );
@@ -297,17 +297,17 @@ export function InfoList({ positions }: { positions: Pos[] }) {
   for (const p of positions) {
     const e = p.ins?.next_earnings;
     if (e?.date) {
-      const when = e.hour === "amc" ? "dopo la chiusura" : e.hour === "bmo" ? "prima dell'apertura" : "orario da confermare";
-      items.push({ date: e.date, title: `Trimestrale ${p.ticker}`, sub: `${when} · tra ${daysUntil(e.date)} giorni`, chip: "Financials" });
+      const when = e.hour === "amc" ? "after the close" : e.hour === "bmo" ? "before the open" : "time to be confirmed";
+      items.push({ date: e.date, title: `${p.ticker} earnings`, sub: `${when} · in ${daysUntil(e.date)} days`, chip: "Financials" });
     }
     const hi = p.ins?.high_52w;
     if (hi && p.price >= hi * 0.95)
-      items.push({ date: today, title: `${p.ticker} vicino al massimo dell'anno`, sub: `a ${pct(Math.max(0, 1 - p.price / hi), 1, false)} dal massimo di ${usd(hi)}`, chip: "Performance" });
+      items.push({ date: today, title: `${p.ticker} near its 52-week high`, sub: `${pct(Math.max(0, 1 - p.price / hi), 1, false)} below the ${usd(hi)} high`, chip: "Performance" });
     if (Math.abs(p.dayPct) >= 0.025)
-      items.push({ date: today, title: `${p.ticker} ${p.dayPct > 0 ? "sale" : "scende"} del ${num(Math.abs(p.dayPct) * 100, 1)}%`, sub: `movimento forte di oggi: ${signedUsd(p.dayChange, 0)} sulla tua posizione`, chip: "Performance" });
+      items.push({ date: today, title: `${p.ticker} ${p.dayPct > 0 ? "up" : "down"} ${num(Math.abs(p.dayPct) * 100, 1)}% today`, sub: `big move: ${signedUsd(p.dayChange, 0)} on your position`, chip: "Performance" });
   }
   items.sort((a, b) => a.date.localeCompare(b.date));
-  if (!items.length) return <p className="text-sm text-muted-foreground">Nessuna informazione per ora.</p>;
+  if (!items.length) return <p className="text-sm text-muted-foreground">Nothing to report right now.</p>;
   return (
     <div className="flex flex-col">
       {items.map((it, i) => (
@@ -327,7 +327,7 @@ export function InfoList({ positions }: { positions: Pos[] }) {
   );
 }
 
-// asOf: when the backend built the insights; "3 h fa" is measured from it.
+// asOf: when the backend built the insights; "3h ago" is measured from it.
 export function NewsList({ positions, asOf }: { positions: Pos[]; asOf?: string }) {
   const seen = new Set<string>();
   const news = positions
@@ -335,12 +335,12 @@ export function NewsList({ positions, asOf }: { positions: Pos[]; asOf?: string 
     .sort((a, b) => (b.datetime ?? 0) - (a.datetime ?? 0))
     .filter((n) => (seen.has(n.headline) ? false : (seen.add(n.headline), true)))
     .slice(0, 6);
-  if (!news.length) return <p className="text-sm text-muted-foreground">Nessuna notizia recente sui tuoi titoli.</p>;
+  if (!news.length) return <p className="text-sm text-muted-foreground">No recent news on your holdings.</p>;
   const ago = (ts?: number | null) => {
     if (!ts) return "";
     const ref = asOf ? Date.parse(asOf) / 1000 : ts;
     const h = Math.round((ref - ts) / 3600);
-    return h < 24 ? `${Math.max(1, h)} h fa` : `${Math.round(h / 24)} g fa`;
+    return h < 24 ? `${Math.max(1, h)}h ago` : `${Math.round(h / 24)}d ago`;
   };
   return (
     <div className="flex flex-col">
@@ -367,7 +367,7 @@ export function Advanced({ positions, risk }: { positions: Pos[]; risk?: RiskAna
   return (
     <details className="group rounded-[22px] border border-border bg-card">
       <summary className="flex cursor-pointer list-none items-center justify-between px-[18px] py-4 font-semibold [&::-webkit-details-marker]:hidden">
-        Analisi avanzata
+        Advanced analysis
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform duration-300 group-open:rotate-180">
           <path d="M6 9l6 6 6-6" />
         </svg>
@@ -375,7 +375,7 @@ export function Advanced({ positions, risk }: { positions: Pos[]; risk?: RiskAna
       <div className="grid grid-cols-2 gap-5 px-[18px] pb-[18px] max-[680px]:grid-cols-1">
         {cm && (
           <div className="min-w-0">
-            <div className="mb-2.5 text-[13px] font-medium text-muted-foreground">Correlazione dei rendimenti giornalieri</div>
+            <div className="mb-2.5 text-[13px] font-medium text-muted-foreground">Correlation of daily returns</div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[12.5px]">
                 <thead>
@@ -405,15 +405,15 @@ export function Advanced({ positions, risk }: { positions: Pos[]; risk?: RiskAna
         )}
         {hr.length > 0 && (
           <div className="min-w-0">
-            <div className="mb-2.5 text-[13px] font-medium text-muted-foreground">Rischio per titolo</div>
+            <div className="mb-2.5 text-[13px] font-medium text-muted-foreground">Risk by holding</div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[13.5px]">
                 <thead>
                   <tr className="text-xs text-muted-foreground">
-                    <th className="py-2 text-left font-medium">Titolo</th>
-                    <th className="py-2 text-right font-medium">Volatilità</th>
+                    <th className="py-2 text-left font-medium">Holding</th>
+                    <th className="py-2 text-right font-medium">Volatility</th>
                     <th className="py-2 text-right font-medium">Beta</th>
-                    <th className="py-2 text-right font-medium">Quota del rischio</th>
+                    <th className="py-2 text-right font-medium">Share of risk</th>
                   </tr>
                 </thead>
                 <tbody>
