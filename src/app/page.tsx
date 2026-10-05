@@ -257,13 +257,6 @@ export default function ResearchReportPage() {
             </section>
 
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 3 } as React.CSSProperties}>
-              <SectionLabel>Research note</SectionLabel>
-              <AICard model={data.report_model ?? undefined}>
-                <BriefMarkdown content={data.report} />
-              </AICard>
-            </section>
-
-            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 4 } as React.CSSProperties}>
               <SectionLabel>Insider activity: last 90 days</SectionLabel>
               <DataCard source="SEC EDGAR">
                 <AvailabilityGuard available={insider?.available} note={insider?.note} emptyLabel="Insider data unavailable">
@@ -271,6 +264,13 @@ export default function ResearchReportPage() {
                 </AvailabilityGuard>
               </DataCard>
             </section>
+            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 4 } as React.CSSProperties}>
+              <SectionLabel>Research note</SectionLabel>
+              <AICard model={data.report_model ?? undefined}>
+                <BriefMarkdown content={data.report} />
+              </AICard>
+            </section>
+
           </>
         )}
       </div>
