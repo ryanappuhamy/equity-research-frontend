@@ -5,32 +5,39 @@ import { cn } from "@/lib/utils";
 
 const MAX_TRANSACTIONS = 6;
 
+type InsiderAction = "Buy" | "Sell" | "Award" | "Exercise" | "Tax withholding" | "Disposition";
+
 type NormalizedInsiderTransaction = {
   name: string;
   role: string;
-  action: "Buy" | "Sell";
+  action: InsiderAction;
   amountLabel: string;
   dateLabel: string;
   sortDate: number;
 };
 
-function parseAction(value: string | undefined): "Buy" | "Sell" {
-  const normalized = (value ?? "").trim().toLowerCase();
-  if (
-    normalized.includes("sell") ||
-    normalized.includes("sale") ||
-    normalized === "s"
-  ) {
-    return "Sell";
-  }
-  if (
-    normalized.includes("buy") ||
-    normalized.includes("purchase") ||
-    normalized === "p"
-  ) {
-    return "Buy";
-  }
-  return "Sell";
+// Form 4 transaction codes. Only P and S are open-market trades; grants (A),
+// vestings and exercises (M) and shares withheld for tax (F) are not.
+const CODE_ACTIONS: Record<string, InsiderAction> = {
+  P: "Buy",
+  S: "Sell",
+  A: "Award",
+  M: "Exercise",
+  F: "Tax withholding",
+  D: "Disposition",
+};
+
+function parseAction(code: string | undefined, label: string | undefined): InsiderAction {
+  const fromCode = CODE_ACTIONS[(code ?? "").trim().toUpperCase()];
+  if (fromCode) return fromCode;
+  const normalized = (label ?? "").trim().toLowerCase();
+  if (normalized.includes("award") || normalized.includes("grant")) return "Award";
+  if (normalized.includes("exercise")) return "Exercise";
+  if (normalized.includes("tax")) return "Tax withholding";
+  if (normalized.includes("disposition")) return "Disposition";
+  if (normalized.includes("sell") || normalized.includes("sale") || normalized === "s") return "Sell";
+  if (normalized.includes("buy") || normalized.includes("purchase") || normalized === "p") return "Buy";
+  return "Disposition";
 }
 
 function formatAmount(amount: InsiderTransaction["amount"], value?: number | null): string {
@@ -38,7 +45,9 @@ function formatAmount(amount: InsiderTransaction["amount"], value?: number | nul
     return fmtCompactUsd(amount);
   }
   if (typeof amount === "string" && amount.trim()) {
-    return amount.startsWith("$") ? amount : `$${amount}`;
+    // Share counts ("95,290 shares") are not dollar amounts.
+    if (/shares?$/i.test(amount.trim()) || amount.startsWith("$")) return amount;
+    return `$${amount}`;
   }
   if (value != null && !Number.isNaN(value)) {
     return value >= 1_000_000 ? fmtCompactUsd(value) : fmtCurrency(value);
@@ -62,7 +71,7 @@ function formatDate(value: string | null | undefined): { label: string; sortDate
 function normalizeTransaction(tx: InsiderTransaction): NormalizedInsiderTransaction {
   const name = tx.name ?? tx.insider_name ?? "Unknown insider";
   const role = tx.role ?? tx.title ?? "";
-  const action = parseAction(tx.action ?? tx.transaction_type);
+  const action = parseAction(tx.code, tx.action ?? tx.transaction_type);
   const amountLabel = formatAmount(tx.amount, tx.dollar_value ?? tx.value);
   const date = formatDate(tx.date ?? tx.transaction_date ?? tx.filing_date);
 
@@ -81,7 +90,7 @@ export function getRecentTransactions(activity?: InsiderActivity): NormalizedIns
   return rows.sort((a, b) => b.sortDate - a.sortDate).slice(0, MAX_TRANSACTIONS);
 }
 
-function ActionBadge({ action }: { action: "Buy" | "Sell" }) {
+function ActionBadge({ action }: { action: InsiderAction }) {
   return (
     <Badge
       variant="outline"
@@ -89,7 +98,9 @@ function ActionBadge({ action }: { action: "Buy" | "Sell" }) {
         "min-w-11 justify-center",
         action === "Buy"
           ? "border-up/30 bg-up/10 text-up"
-          : "border-down/30 bg-down/10 text-down",
+          : action === "Sell"
+            ? "border-down/30 bg-down/10 text-down"
+            : "border-border bg-secondary text-muted-foreground",
       )}
     >
       {action}

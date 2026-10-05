@@ -189,6 +189,8 @@ export interface InsiderTransaction {
   title?: string;
   action?: string;
   transaction_type?: string;
+  /** Form 4 transaction code: P, S, A, M, F, D */
+  code?: string;
   amount?: number | string | null;
   value?: number | null;
   dollar_value?: number | null;
