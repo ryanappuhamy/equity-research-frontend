@@ -13,11 +13,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMonthlyHistory, usePortfolio } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 
+// ter: the fund's annual expense ratio in percent (issuer figures). Single stocks have none.
 const INDEXES = [
-  { t: "SPY", name: "S&P 500" },
-  { t: "URTH", name: "MSCI World" },
-  { t: "VT", name: "All-World" },
-  { t: "QQQ", name: "Nasdaq 100" },
+  { t: "SPY", name: "S&P 500", ter: 0.0945 },
+  { t: "URTH", name: "MSCI World", ter: 0.24 },
+  { t: "VT", name: "All-World", ter: 0.06 },
+  { t: "QQQ", name: "Nasdaq 100", ter: 0.2 },
 ];
 
 // Capital-gains rate applied to the final gain (same defaults as the Portfolio tax card).
@@ -101,12 +102,16 @@ export default function SimulatorPage() {
   const [fee, setFee] = useState(1);
   const [ret, setRet] = useState(7);
   const [inflation, setInflation] = useState(false);
+  const [terByInst, setTerByInst] = useState<Record<string, number>>({});
   const [country, setCountry] = useState("CH");
 
   const { data: portfolio } = usePortfolio();
   const own = (portfolio?.positions ?? []).map((p) => p.ticker.toUpperCase()).filter((t) => !INDEXES.some((i) => i.t === t));
-  const instruments = [...INDEXES, ...own.map((t) => ({ t, name: t }))];
-  const name = instruments.find((i) => i.t === inst)?.name ?? inst;
+  const instruments = [...INDEXES, ...own.map((t) => ({ t, name: t, ter: 0 }))];
+  const current = instruments.find((i) => i.t === inst);
+  const name = current?.name ?? inst;
+  const defaultTer = current?.ter ?? 0;
+  const ter = terByInst[inst] ?? defaultTer;
 
   const { data, isPending } = useMonthlyHistory(inst);
   const points = useMemo(() => data?.points ?? [], [data]);
@@ -145,20 +150,28 @@ export default function SimulatorPage() {
     const rnd = mulberry32(42);
     const mu = Math.log(1 + ret / 100) / 12 - (sigma * sigma) / 2;
     const infl = inflation ? Math.pow(1.02, 1 / 12) : 1;
+    // The fund deducts its TER from the value continuously: a monthly drag.
+    const terDrag = 1 - ter / 100 / 12;
     const per: number[][] = Array.from({ length: months + 1 }, () => []);
+    const finalsNoTer: number[] = [];
     for (let k = 0; k < paths; k++) {
       let v = 0;
+      let vNoTer = 0;
       per[0].push(0);
       for (let m = 1; m <= months; m++) {
         const z = Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
-        v = (v + Math.max(0, amount - fee)) * Math.exp(mu + sigma * z);
+        const growth = Math.exp(mu + sigma * z);
+        v = (v + Math.max(0, amount - fee)) * growth * terDrag;
+        vNoTer = (vNoTer + Math.max(0, amount - fee)) * growth;
         per[m].push(v / Math.pow(infl, m));
       }
+      finalsNoTer.push(vNoTer / Math.pow(infl, months));
     }
     const q = (a: number[], p: number) => [...a].sort((x, y) => x - y)[Math.floor(p * (a.length - 1))];
     const p10 = per.map((a) => q(a, 0.1));
     const p50 = per.map((a) => q(a, 0.5));
     const p90 = per.map((a) => q(a, 0.9));
+    const terCost = q(finalsNoTer, 0.5) - p50[p50.length - 1];
     const start = new Date().toISOString().slice(0, 7);
     return {
       kind: "proj" as const,
@@ -170,8 +183,9 @@ export default function SimulatorPage() {
       months,
       sigma,
       histCagr,
+      terCost,
     };
-  }, [points, mode, yrs, amount, fee, ret, inflation]);
+  }, [points, mode, yrs, amount, fee, ret, inflation, ter]);
 
   const pill = (on: boolean) =>
     cn(
@@ -238,6 +252,25 @@ export default function SimulatorPage() {
                   )
                 }
               />
+            )}
+            {mode === "proj" ? (
+              <Slider
+                id="ter"
+                label="Annual fund fee (TER)"
+                value={ter}
+                display={`${ter.toFixed(2)}%`}
+                min={0}
+                max={1.5}
+                step={0.01}
+                onChange={(v) => setTerByInst((m) => ({ ...m, [inst]: v }))}
+                hint={defaultTer ? `${name} ETF charges ${defaultTer.toFixed(2)}% a year.` : "Single stocks have no fund fee."}
+              />
+            ) : (
+              defaultTer > 0 && (
+                <p className="text-xs text-faint">
+                  The {name} ETF charges a {defaultTer.toFixed(2)}% annual fee (TER). It is already reflected in the historical prices, so it is not deducted again here.
+                </p>
+              )
             )}
             <Slider id="fee" label="Fee per contribution" value={fee} display={usd(fee, fee % 1 ? 2 : 0)} min={0} max={10} step={0.5} onChange={setFee} />
             {mode === "proj" && <Toggle checked={inflation} onChange={setInflation} label="Adjust for inflation (2%)" />}
@@ -331,6 +364,7 @@ export default function SimulatorPage() {
                       {inflation ? " in today's purchasing power" : ""}
                       {taxRate > 0 && `, about ${usd(result.p50[result.p50.length - 1] - Math.max(0, result.p50[result.p50.length - 1] - amount * result.months) * taxRate, 0)} after tax`}
                       . The range uses the historical volatility of {name} ({pct(result.sigma * Math.sqrt(12), 0, false)} a year) and an expected return of {pct(ret / 100, 1, false)}.
+                      {ter > 0 && result.terCost > 0 && <> The {ter.toFixed(2)}% TER costs you about <b>{usd(result.terCost, 0)}</b> over the period.</>}
                     </>
                   )}
                 </p>
