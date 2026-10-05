@@ -22,6 +22,7 @@ import type {
   PortfolioPerformanceResponse,
   PortfolioResponse,
   ReportResponse,
+  TickerNewsResponse,
 } from "./types";
 import type { BenchmarkTicker } from "@/lib/portfolio-performance";
 
@@ -31,6 +32,7 @@ export const qk = {
   analysis: ["portfolio", "analysis"] as const,
   insights: ["portfolio", "insights"] as const,
   monthly: (ticker: string) => ["market", "monthly", ticker] as const,
+  news: (ticker: string) => ["news", ticker] as const,
   performance: (benchmark: string) => ["portfolio", "performance", benchmark] as const,
   brief: ["portfolio", "brief"] as const,
   alerts: ["alerts"] as const,
@@ -98,6 +100,15 @@ export function usePortfolioInsights(opts?: QueryOpts<PortfolioInsightsResponse>
     queryFn: () => apiFetch<PortfolioInsightsResponse>("/portfolio/insights"),
     staleTime: 5 * 60_000,
     ...opts,
+  });
+}
+
+export function useTickerNews(ticker: string) {
+  return useQuery<TickerNewsResponse, Error>({
+    queryKey: qk.news(ticker),
+    queryFn: () => apiFetch<TickerNewsResponse>(`/news/${encodeURIComponent(ticker)}`),
+    enabled: !!ticker,
+    staleTime: 15 * 60_000,
   });
 }
 

@@ -96,6 +96,19 @@ export interface MonthlyHistoryResponse extends Available {
   points: { month: string; close: number }[];
 }
 
+export interface NewsItem {
+  headline: string;
+  source?: string | null;
+  url?: string | null;
+  datetime?: number | null;
+  summary?: string | null;
+}
+
+export interface TickerNewsResponse extends Available {
+  ticker: string;
+  items: NewsItem[];
+}
+
 export interface BriefResponse {
   portfolio: Holding[];
   brief: string;

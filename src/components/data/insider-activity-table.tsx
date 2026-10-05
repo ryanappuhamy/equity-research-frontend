@@ -121,9 +121,15 @@ export function InsiderActivityTable({ activity }: { activity?: InsiderActivity 
         </p>
       )}
 
+      {transactions.length === 0 && (
+        <p className="rounded-2xl bg-secondary/60 px-4 py-3 text-sm text-muted-foreground">
+          {activity?.note ?? "No insider transactions to show."}
+        </p>
+      )}
+
       {transactions.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-card/40">
-          <ul className="divide-y divide-white/[0.04]">
+        <div className="overflow-hidden rounded-2xl border border-border">
+          <ul className="divide-y divide-border/70">
             {transactions.map((tx, index) => (
               <li
                 key={`${tx.name}-${tx.dateLabel}-${tx.action}-${index}`}

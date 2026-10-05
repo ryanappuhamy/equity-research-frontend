@@ -13,6 +13,7 @@ import { InsiderActivityTable } from "@/components/data/insider-activity-table";
 import { ReportMetricCards } from "@/components/data/report-metric-cards";
 import { ResearchReportLoading } from "@/components/data/research-report-loading";
 import { SectionLabel } from "@/components/data/section-label";
+import { TickerNews } from "@/components/data/ticker-news";
 import { Shell } from "@/components/layout/shell";
 import { Topbar } from "@/components/layout/topbar";
 import { CountUp } from "@/components/portfolio/count-up";
@@ -257,7 +258,7 @@ export default function ResearchReportPage() {
             </section>
 
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 3 } as React.CSSProperties}>
-              <SectionLabel>Insider activity: last 90 days</SectionLabel>
+              <SectionLabel>Insider activity: last 6 months</SectionLabel>
               <DataCard source="SEC EDGAR">
                 <AvailabilityGuard available={insider?.available} note={insider?.note} emptyLabel="Insider data unavailable">
                   <InsiderActivityTable activity={insider} />
@@ -265,6 +266,11 @@ export default function ResearchReportPage() {
               </DataCard>
             </section>
             <section className="animate-rise flex flex-col gap-3" style={{ "--i": 4 } as React.CSSProperties}>
+              <SectionLabel>Recent news</SectionLabel>
+              <TickerNews ticker={data.ticker} />
+            </section>
+
+            <section className="animate-rise flex flex-col gap-3" style={{ "--i": 5 } as React.CSSProperties}>
               <SectionLabel>Research note</SectionLabel>
               <AICard model={data.report_model ?? undefined}>
                 <BriefMarkdown content={data.report} />
